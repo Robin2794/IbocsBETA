@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IBOCS | Add Forecast</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #222;
+        }
+
+        .page {
+            max-width: 100%;
+            border-radius: 12px;
+            background: #fff;
+            padding: 24px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .subtext {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 13px 16px;
+            font-weight: 700;
+            font-size: 13px;
+            border-bottom: 1px solid #eef0f4;
+            background: #fafbfe;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .summary-box {
+            border: 1px solid #e8ebf1;
+            border-radius: 10px;
+            padding: 14px;
+            background: #fafbfe;
+        }
+
+        .summary-box .lbl {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .summary-box .val {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        .btn-action {
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: 0;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            background: #2563eb;
+            color: #fff;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-action:disabled {
+            background: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary-action {
+            padding: 9px 16px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            background: #fff;
+            color: #374151;
+        }
+
+        /* Matrix table */
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            border: 1px solid #e5e7eb;
+            padding: 8px 10px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .matrix-table thead tr:first-child th {
+            background: #1a237e;
+            color: #fff;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .matrix-table thead tr:nth-child(2) th {
+            background: #f1f3f9;
+            color: #374151;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .matrix-table thead tr:nth-child(3) th {
+            background: #f1f3f9;
+            color: #374151;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .matrix-table th.th-yellow {
+            background: #fef08a !important;
+            color: #713f12 !important;
+        }
+
+        .matrix-table thead th.th-calc {
+            background: #fde9d0 !important;
+            color: #7c4a03 !important;
+        }
+
+        .matrix-table td.td-yellow {
+            background: #fefce8;
+            color: #713f12;
+            font-weight: 600;
+        }
+
+        .matrix-table td {
+            text-align: center;
+        }
+
+        .matrix-table tbody tr:hover {
+            background: #f8faff;
+        }
+
+        .matrix-table .sticky-col {
+            position: sticky;
+            background: #fff;
+            z-index: 4;
+        }
+
+        .matrix-table th.sticky-col {
+            background: #1a237e;
+            color: #fff;
+            z-index: 8;
+        }
+
+        .matrix-table thead tr:nth-child(2) th.sticky-col {
+            background: #1a237e;
+            color: #fff;
+        }
+
+        .matrix-table .sticky-check {
+            left: 0;
+            min-width: 40px;
+            width: 40px;
+        }
+
+        .matrix-table .sticky-plan {
+            left: 40px;
+            min-width: 130px;
+            width: 130px;
+        }
+
+        .matrix-table .sticky-desc {
+            left: 170px;
+            min-width: 170px;
+            width: 170px;
+            white-space: normal;
+            line-height: 1.25;
+        }
+
+        .matrix-table .sticky-location {
+            left: 340px;
+            min-width: 90px;
+            width: 90px;
+        }
+
+        .matrix-table .sticky-kandang {
+            left: 430px;
+            min-width: 90px;
+            width: 90px;
+            box-shadow: 4px 0 8px rgba(15, 23, 42, 0.08);
+        }
+
+        .matrix-table tbody tr:hover .sticky-col {
+            background: #f8faff;
+        }
+
+        .formula-tip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            min-height: 20px;
+            cursor: help;
+            border-bottom: 1px dotted rgba(26, 35, 126, 0.45);
+        }
+
+        .formula-popover {
+            position: fixed;
+            min-width: 260px;
+            max-width: 360px;
+            white-space: pre-line;
+            text-align: left;
+            background: #111827;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 11px;
+            line-height: 1.45;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.28);
+            pointer-events: none;
+            z-index: 20;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .12s ease;
+        }
+
+        .formula-popover.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .formula-popover::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #111827;
+        }
+
+        .col-feed {
+            background: #f9fafc;
+            font-weight: 700;
+            min-width: 180px;
+        }
+
+        .col-phase {
+            background: #f9fafc;
+            color: #6b7280;
+            font-size: 11px;
+            min-width: 90px;
+        }
+
+        .col-uom {
+            background: #f9fafc;
+            color: #6b7280;
+            font-size: 11px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .cell-vitality {
+            color: #166534;
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .cell-feedcons {
+            color: #1d4ed8;
+            text-align: right;
+            min-width: 90px;
+        }
+
+        .cell-qty {
+            text-align: right;
+            min-width: 90px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .cell-qty:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .cell-qty-skip {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .row-total td {
+            background: #fef9c3;
+            font-weight: 700;
+        }
+
+        .row-total .col-feed {
+            background: #fef9c3;
+        }
+
+        .kdg-header-main {
+            background: #1a237e !important;
+            color: #fff !important;
+        }
+
+        .kdg-sub {
+            font-size: 10px;
+            font-weight: 400;
+            opacity: 0.85;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* Chip */
+        .chip {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            margin: 1px;
+        }
+
+        .chip-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .chip-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .chip-orange {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Company section */
+        .company-section {
+            margin-bottom: 22px;
+        }
+
+        .company-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 10px 14px;
+            background: #1a237e;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .company-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            flex: 1;
+        }
+
+        .company-stat {
+            font-size: 11px;
+            color: #c7d2fe;
+            white-space: nowrap;
+        }
+
+        .company-table-wrap {
+            border: 1.5px solid #e0e7ef;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+        }
+
+        /* Filter bar */
+        .filter-panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: #f1f5f9;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #475569;
+            transition: all .2s ease;
+        }
+
+        .filter-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .filter-btn.active {
+            background: #eef2ff;
+            color: #4338ca;
+            border-color: #c7d2fe;
+            box-shadow: 0 1px 2px rgba(67, 56, 202, 0.05);
+        }
+
+        /* Row action buttons */
+        .btn-info-plan {
+            padding: 0 7px;
+            border: 1px solid #c4b5fd;
+            border-radius: 5px;
+            background: #f5f3ff;
+            cursor: pointer;
+            height: 24px;
+            font-size: 11px;
+            color: #6d28d9;
+            white-space: nowrap;
+        }
+
+        .btn-info-plan:hover {
+            background: #ede9fe;
+        }
+
+        .btn-rekom {
+            padding: 0 7px;
+            border: 1.5px solid #2563eb;
+            border-radius: 5px;
+            background: #eff6ff;
+            cursor: pointer;
+            height: 24px;
+            font-size: 11px;
+            color: #1d4ed8;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .btn-rekom:hover {
+            background: #dbeafe;
+        }
+
+        .btn-rekom.has-items {
+            background: #2563eb;
+            color: #fff;
+            border-color: #1d4ed8;
+        }
+
+        .btn-rekom.has-items:hover {
+            background: #1d4ed8;
+        }
+
+        /* Plan info modal */
+        .pi-section {
+            padding: 10px 16px 4px;
+        }
+
+        .pi-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: #6d28d9;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pi-section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e9d5ff;
+        }
+
+        .pi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+            margin-bottom: 6px;
+        }
+
+        .pi-item {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 7px 10px;
+        }
+
+        .pi-item .pik {
+            font-size: 10px;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 2px;
+        }
+
+        .pi-item .piv {
+            font-size: 13px;
+            color: #111;
+            font-weight: 500;
+        }
+
+        .pi-item .piv.num {
+            color: #1a237e;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* Rekomendasi modal */
+        .rekom-item {
+            background: #f8faff;
+            border: 1px solid #dbeafe;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+
+        .rekom-item .rqty {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .rekom-item .rsub {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .rekom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        /* Formula box (kept for calc modal) */
+        .formula-box {
+            background: #f8faff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 12px;
+            color: #374151;
+            margin-bottom: 14px;
+        }
+
+        .formula-box .f-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1d4ed8;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-bottom: 4px;
+        }
+
+        .formula-box code {
+            background: #e0e7ff;
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 11px;
+            color: #3730a3;
+        }
+
+        /* Modal */
+        .modal-header {
+            background: #1a237e;
+            color: #fff;
+        }
+
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+
+        .calc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .calc-table th {
+            background: #f1f3f9;
+            font-size: 11px;
+            padding: 7px 10px;
+            border-bottom: 2px solid #e5e7eb;
+            text-align: right;
+        }
+
+        .calc-table th:first-child {
+            text-align: center;
+        }
+
+        .calc-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #f3f4f6;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .calc-table td:first-child {
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .calc-table tr.phase-total td {
+            background: #f0fdf4;
+            font-weight: 700;
+            color: #166534;
+        }
+
+        /* Wizard — kartu informasi plan */
+        .wz-card { border: 1px solid #e2e6ef; border-radius: 12px; background: #fff; margin-bottom: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 23, 42, .04); }
+        .wz-card-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: #1a237e; background: linear-gradient(90deg, #eef2ff, #f8faff); border-bottom: 1px solid #e2e6ef; }
+        .wz-card-h i { font-size: 15px; }
+        .wz-card.y .wz-card-h { color: #854d0e; background: linear-gradient(90deg, #fef9c3, #fffbeb); }
+        .wz-note { margin-left: auto; font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; color: #6b7280; }
+        .wz-hint { display: block; font-size: 9px; font-weight: 500; letter-spacing: 0; text-transform: none; color: #a16207; margin-top: 1px; }
+        .wz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1px; background: #eef0f5; }
+        .wz-grid.c3w { grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1fr); }
+        .wz-grid.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .wz-f { background: #fff; padding: 10px 14px; min-width: 0; }
+        .wz-card.y .wz-f { background: #fffef6; }
+        .wz-f .k { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
+        .wz-card.y .wz-f .k { color: #92400e; }
+        .wz-f .v { font-size: 14px; font-weight: 700; color: #111827; word-break: break-word; }
+        .wz-f .v small { font-size: 11px; font-weight: 500; color: #6b7280; }
+        .wz-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+        .wz-kpi { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 12px; border: 1px solid transparent; }
+        .wz-kpi > i { font-size: 26px; opacity: .85; }
+        .wz-kpi .k { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; opacity: .8; }
+        .wz-kpi .v { font-size: 20px; font-weight: 800; line-height: 1.2; }
+        .wz-kpi .v small { font-size: 12px; font-weight: 600; }
+        .wz-kpi .s { font-size: 10.5px; opacity: .8; margin-top: 2px; }
+        .wz-kpi.blue { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+        .wz-kpi.indigo { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+        .wz-kpi.amber { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+        .wz-kpi.red { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        /* Summary Forecast */
+        .sum-hero { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; padding: 16px; border-radius: 14px; background: linear-gradient(135deg, #1a237e, #3949ab); color: #fff; }
+        .sum-stat { display: flex; align-items: center; gap: 12px; }
+        .sum-stat > i { font-size: 28px; opacity: .8; }
+        .sum-stat .k { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .75; }
+        .sum-stat .v { font-size: 24px; font-weight: 800; line-height: 1.15; }
+        .sum-stat .v.sm { font-size: 15px; }
+        .sum-stat .v small { font-size: 13px; font-weight: 600; opacity: .85; }
+        .sum-card { border: 1px solid #dfe3ee; border-radius: 14px; background: #fff; margin-bottom: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(15, 23, 42, .05); }
+        .sum-card.is-skip { opacity: .55; }
+        .sum-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f5f7ff; cursor: pointer; user-select: none; }
+        .sum-head:hover { background: #eef2ff; }
+        .sum-card.open .sum-head { border-bottom: 1px solid #e2e6ef; }
+        .sum-chev { font-size: 18px; color: #3949ab; transition: transform .2s; }
+        .sum-card.open .sum-chev { transform: rotate(180deg); }
+        .sum-body { display: none; }
+        .sum-card.open .sum-body { display: block; }
+        .sum-data[hidden] { display: none; }
+        .sum-ava { width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: #1a237e; color: #fff; }
+        .sum-title { font-size: 15px; font-weight: 800; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sum-sub { font-size: 12px; color: #6b7280; }
+        .sum-flow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 10px; padding: 14px 16px; }
+        .sum-flow-box { border-radius: 12px; padding: 12px 14px; border: 1px solid transparent; }
+        .sum-flow-box.before { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .sum-flow-box.after { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+        .sum-flow-box .k { font-size: 10px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; opacity: .85; }
+        .sum-flow-box .v { font-size: 20px; font-weight: 800; line-height: 1.25; }
+        .sum-flow-box .s { font-size: 11.5px; opacity: .85; }
+        .sum-flow-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #3949ab; min-width: 110px; }
+        .sum-flow-mid i { font-size: 26px; }
+        .sum-flow-mid .o { font-size: 13px; font-weight: 800; }
+        .sum-flow-mid .d { font-size: 11px; font-weight: 700; color: #6b7280; }
+        .sum-flow-mid .d.up { color: #15803d; }
+        .sum-cols { display: grid; grid-template-columns: 1fr; gap: 14px; padding: 0 16px 14px; }
+        .sum-cols:has(.sum-data:not([hidden])) { grid-template-columns: 1.4fr 1fr; }
+        .sum-col { border: 1px solid #e8ebf1; border-radius: 12px; padding: 12px 14px; background: #fcfcff; min-width: 0; }
+        .sum-col-h { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: #1a237e; margin-bottom: 10px; }
+        .sum-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .sum-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: #eef2ff; border: 1px solid #c7d2fe; font-size: 12px; color: #1a237e; }
+        .sum-chip small { font-size: 10px; text-transform: uppercase; letter-spacing: .3px; opacity: .75; }
+        .sum-table { font-size: 12.5px; }
+        .sum-table thead th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; color: #6b7280; background: transparent; }
+        .sum-table tfoot td { font-weight: 800; color: #1a237e; background: #eef2ff; border-top: 2px solid #c7d2fe; }
+        .sum-kv { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #e5e7eb; font-size: 12.5px; }
+        .sum-kv:last-child { border-bottom: 0; }
+        .sum-kv span { color: #6b7280; }
+        .sum-est { margin: 0 16px 16px; border: 1px solid #bbf7d0; border-radius: 12px; background: #f6fff9; overflow: hidden; }
+        .sum-est .sum-col-h { color: #166534; padding: 10px 14px 0; }
+        .sum-est-grid { background: transparent; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        .sum-est-grid .wz-f { background: transparent; }
+        @media (max-width: 768px) { .sum-hero, .sum-cols { grid-template-columns: 1fr; } .sum-flow { grid-template-columns: 1fr; } .sum-flow-mid { flex-direction: row; gap: 8px; } }
+        @media (max-width: 992px) { .wz-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wz-grid.c4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 520px) { .wz-kpis { grid-template-columns: 1fr; } }
+
+        @media (max-width: 900px) {
+
+            .summary-grid,
+            .info-grid,
+            .calc-result-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .rekom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .summary-grid,
+            .info-grid,
+            .calc-result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand fw-bold" href="customer_dashboard.html">IBOCS</a>
+            <span class="navbar-text text-white-50 small d-none d-md-inline">Customer Portal</span>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                        id="userBtn">User</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text small text-muted" id="userInfo">-</span></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="index.html">Ganti Portal</a></li>
+                        <li><button class="dropdown-item text-danger" id="btnLogout">Logout</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-3">
+        <div class="row g-3">
+            <div class="col-lg-2" id="sidebar-container"></div>
+            <div class="col-lg-10">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0 fw-bold" style="color:#1a237e;"><i class="bi bi-plus-square me-2"></i>Add Forecast
+                    </h4>
+                    <a href="customer_ForecastList.html" class="btn btn-outline-secondary btn-sm fw-bold">
+                        <i class="bi bi-arrow-left me-1"></i>Back to List
+                    </a>
+                </div>
+
+                <div class="page shadow-sm">
+                    <div class="topbar">
+                        <div>
+                            <h1>Add Forecast</h1>
+                            <div class="subtext">Pilih plan, tentukan week, cek kalkulator kebutuhan pakan, lalu simpan
+                                dokumen forecast.</div>
+                        </div>
+                        <div style="min-width:260px;">
+                            <label class="form-label mb-1 small fw-bold text-muted">Forecast Period</label>
+                            <input type="text" class="form-control form-control-sm fw-bold bg-white" id="forecastPeriod"
+                                readonly placeholder="Pilih range tanggal">
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="summary-grid mb-3" id="summaryGrid"></div>
+
+                    <!-- Filters -->
+                    <div id="filterContainer"></div>
+
+                    <!-- Plans by Company -->
+                    <div id="plansContainer"></div>
+
+                </div>
+                <div class="text-center text-muted small mt-4 mb-2">© 2026 IBOCS — Customer Portal</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div id="bulkActionBar"
+        style="display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; padding:16px 24px; box-shadow:0 -4px 20px rgba(0,0,0,0.08); z-index:1000; justify-content:flex-end; gap:12px; align-items:center;">
+        <div class="text-muted small me-auto d-none d-md-block">Sistem akan membuat dokumen forecast terpisah sesuai
+            Forecast Period yang dipilih.</div>
+        <div style="font-weight:700; color:#1a237e;" class="me-3"><span id="bulkActionCount">0</span> Plan Dipilih</div>
+        <button class="btn btn-primary px-4 fw-bold" style="border-radius:8px;" id="btnBulkSubmit"
+            onclick="startReviewFlow()">
+            <i class="bi bi-clipboard2-check me-2"></i>Buat Forecast
+        </button>
+    </div>
+
+    <!-- Plan Info Modal -->
+    <div class="modal fade" id="planInfoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header" style="background:#5b21b6;">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>Detail Plan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" id="planInfoBody"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- Item Search Modal -->
+    <div class="modal fade" id="itemSearchModal" tabindex="-1" aria-hidden="true"
+        style="z-index: 1060; background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header" style="background:#1a237e;">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-search me-2"></i>Pilih Item Pakan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="p-3 border-bottom">
+                        <input type="text" class="form-control form-control-sm" id="itemSearchQ"
+                            placeholder="Ketik nama atau kode item..." oninput="filterItemSearch(this.value)">
+                    </div>
+                    <div id="itemSearchList" style="max-height:380px;overflow-y:auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Wizard Modal (Info → Input Order → Summary) -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header" style="background:#1a237e;">
+                    <h5 class="modal-title fw-bold text-white" id="reviewModalTitle"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" id="reviewModalBody"></div>
+                <div class="modal-footer" id="reviewModalFooter"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"
+        style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="master_data.js"></script>
+    <script src="std_sap_data.js"></script>
+    <script src="sidebar.js"></script>
+    <script>
+        // ─── SESSION GUARD ────────────────────────────────────────────────────────
+        const sess = localStorage.getItem("IBOCS_user");
+        if (!sess) window.location.href = "login.html?role=customer";
+        const user = JSON.parse(sess);
+        if (user.role !== "customer" && user.role !== "super_admin") window.location.href = "index.html";
+        document.getElementById("userBtn").textContent = user.name || "User";
+        document.getElementById("userInfo").textContent = `${user.email} • role=${user.role}`;
+        document.getElementById("btnLogout").addEventListener("click", () => {
+            localStorage.removeItem("IBOCS_user");
+            window.location.href = "index.html";
+        });
+
+        // ─── REVIEW FLOW STATE ────────────────────────────────────────────────────
+        let _reviewPlans = [];
+        let _reviewStep = 0;
+        let _reviewData = {};
+        let _reviewModalInst = null;
+
+        // ─── STD ANALYSIS ─────────────────────────────────────────────────────────
+        const STD = [
+            { d: 1, m: 0.00, v: 100.00, fd: 0.0010 },
+            { d: 2, m: 0.10, v: 99.90, fd: 0.0020 },
+            { d: 3, m: 0.10, v: 99.80, fd: 0.0030 },
+            { d: 4, m: 0.10, v: 99.70, fd: 0.0040 },
+            { d: 5, m: 0.10, v: 99.60, fd: 0.0050 },
+            { d: 6, m: 0.10, v: 99.50, fd: 0.0060 },
+            { d: 7, m: 0.10, v: 99.40, fd: 0.0070 },
+            { d: 8, m: 0.20, v: 99.20, fd: 0.0090 },
+            { d: 9, m: 0.20, v: 99.00, fd: 0.0120 },
+            { d: 10, m: 0.20, v: 98.80, fd: 0.0150 },
+            { d: 11, m: 0.20, v: 98.60, fd: 0.0180 },
+            { d: 12, m: 0.20, v: 98.40, fd: 0.0220 },
+            { d: 13, m: 0.20, v: 98.20, fd: 0.0260 },
+            { d: 14, m: 0.20, v: 98.00, fd: 0.0300 },
+            { d: 15, m: 0.20, v: 97.80, fd: 0.0350 },
+            { d: 16, m: 0.20, v: 97.60, fd: 0.0400 },
+            { d: 17, m: 0.20, v: 97.40, fd: 0.0450 },
+            { d: 18, m: 0.20, v: 97.20, fd: 0.0500 },
+            { d: 19, m: 0.20, v: 97.00, fd: 0.0560 },
+            { d: 20, m: 0.20, v: 96.80, fd: 0.0620 },
+            { d: 21, m: 0.20, v: 96.60, fd: 0.0680 },
+            { d: 22, m: 0.30, v: 96.30, fd: 0.0750 },
+            { d: 23, m: 0.30, v: 96.00, fd: 0.0820 },
+            { d: 24, m: 0.30, v: 95.70, fd: 0.0890 },
+            { d: 25, m: 0.30, v: 95.40, fd: 0.0960 },
+            { d: 26, m: 0.30, v: 95.10, fd: 0.1030 },
+            { d: 27, m: 0.30, v: 94.80, fd: 0.1100 },
+            { d: 28, m: 0.30, v: 94.50, fd: 0.1160 },
+            { d: 29, m: 0.30, v: 94.20, fd: 0.1220 },
+            { d: 30, m: 0.30, v: 93.90, fd: 0.1280 },
+            { d: 31, m: 0.30, v: 93.60, fd: 0.1330 },
+            { d: 32, m: 0.30, v: 93.30, fd: 0.1380 },
+            { d: 33, m: 0.30, v: 93.00, fd: 0.1420 },
+            { d: 34, m: 0.30, v: 92.70, fd: 0.1460 },
+            { d: 35, m: 0.30, v: 92.40, fd: 0.1500 },
+        ];
+
+        const PHASES = [
+            { code: "FEED-001", name: "Pakan Pre-Starter (S-0)", dayFrom: 1, dayTo: 7, uom: "Kg" },
+            { code: "FEED-002", name: "Pakan Starter (BR-1)", dayFrom: 8, dayTo: 21, uom: "Kg" },
+            { code: "FEED-004", name: "Pakan Finisher (BR-3)", dayFrom: 22, dayTo: 35, uom: "Kg" },
+        ];
+
+        // ─── DEMO PLANS (mapped from kandang aktif) ───────────────────────────────
+        let DEMO_PLANS = [];
+
+        let _sapPlansPool = [
+            {
+                planNo: "100004423", fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi",
+                location: "Pekalongan", id: "F0001364", wh: "F0001364", docQty: 9700, docType: "DOC Broiler",
+                ageLastPosting: 22, ageCurrent: 27, lastPostingDate: "29-Apr-26",
+                sapData: { mort: 269, lastPop: 9431, bw: 0.985, fcr: 1.297, fiAct: 1.242, fiCum: 12050, grpo: 22700, poItr: null, lastStok: 10650 }
+            },
+            {
+                planNo: "100004424", fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi",
+                location: "Blora", id: "F0001471", wh: "F0001471", docQty: 30800, docType: "DOC Broiler",
+                ageLastPosting: 19, ageCurrent: 24, lastPostingDate: "29-Apr-26",
+                sapData: { mort: 738, lastPop: 30370, bw: 0.75, fcr: 1.225, fiAct: 0.082, fiCum: 0.906, grpo: 43000, poItr: null, lastStok: 16600 }
+            },
+            {
+                planNo: "100004425", fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi",
+                location: "Klaten", id: "F0001470", wh: "F0001470", docQty: 7200, docType: "DOC Broiler",
+                ageLastPosting: 18, ageCurrent: 21, lastPostingDate: "1-May-26",
+                sapData: { mort: 446, lastPop: 6826, bw: 0.586, fcr: 1.212, fiAct: 0.08, fiCum: 0.674, grpo: 9000, poItr: null, lastStok: 3550 }
+            },
+            {
+                planNo: "100000271", fcStatus: "Draft", status: "Active", company: "PT AYM",
+                location: "Ponorogo", id: "F0000274", wh: "F0000274", docQty: 5000, docType: "DOC Broiler",
+                ageLastPosting: 12, ageCurrent: 14, lastPostingDate: "2-May-26",
+                sapData: { mort: 46, lastPop: 5004, bw: 0.345, fcr: 1.303, fiAct: 0.04, fiCum: 0.45, grpo: 4000, poItr: 1750 }
+            },
+            {
+                planNo: "100000272", fcStatus: "Draft", status: "Active", company: "PT AYM",
+                location: "Malang", id: "F0000073", wh: "F0000073", docQty: 8500, docType: "DOC Broiler",
+                ageLastPosting: 11, ageCurrent: 13, lastPostingDate: "1-May-26",
+                sapData: { mort: 155, lastPop: 8430, bw: 0.325, fcr: 1.113, fiAct: 0.059, fiCum: 0.359, grpo: 5500, poItr: 2450 }
+            },
+            {
+                planNo: "100000273", fcStatus: "Draft", status: "Active", company: "PT AYM",
+                location: "Tuban", id: "F0000173", wh: "F0000173", docQty: 9900, docType: "DOC Broiler",
+                ageLastPosting: 11, ageCurrent: 13, lastPostingDate: "1-May-26",
+                sapData: { mort: 329, lastPop: 9670, bw: 0.187, fcr: 1.244, fiAct: 0.031, fiCum: 0.227, grpo: 5000, poItr: 2750 }
+            },
+            {
+                planNo: "21000235", fcStatus: "Draft", status: "Active", company: "PT CTU",
+                location: "Pasuruan", id: "FSR0001", wh: "FSR0001", docQty: 9315, docType: "DOC Layer",
+                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
+                sapData: { mort: 386, lastPop: 8929, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 37700, poItr: null, lastStok: 1844, statusKalang: "GROWTH", kebutuhanMinggu: 4500, sisaKebutuhan: 18200 }
+            },
+            {
+                planNo: "21000236", fcStatus: "Draft", status: "Active", company: "PT CTU",
+                location: "Pasuruan", id: "FSR0002", wh: "FSR0002", docQty: 9460, docType: "DOC Layer",
+                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
+                sapData: { mort: 326, lastPop: 9134, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 37250, poItr: null, lastStok: 979, statusKalang: "GROWTH", kebutuhanMinggu: 3800, sisaKebutuhan: 15400 }
+            },
+            {
+                planNo: "21000237", fcStatus: "Draft", status: "Active", company: "PT CTU",
+                location: "Pasuruan", id: "FSR0003", wh: "FSR0003", docQty: 8940, docType: "DOC Layer",
+                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
+                sapData: { mort: 276, lastPop: 8664, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 31850, poItr: null, lastStok: 1537, statusKalang: "GROWTH", kebutuhanMinggu: 4200, sisaKebutuhan: 16800 }
+            },
+            {
+                planNo: "21000238", fcStatus: "Draft", status: "Active", company: "PT CTU",
+                location: "Pasuruan", id: "FSR0004", wh: "FSR0004", docQty: 9460, docType: "DOC Layer",
+                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
+                sapData: { mort: 291, lastPop: 9169, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 32150, poItr: null, lastStok: 836, statusKalang: "GROWTH", kebutuhanMinggu: 3600, sisaKebutuhan: 14400 }
+            },
+            {
+                planNo: "21000239", fcStatus: "Draft", status: "Active", company: "PT CTU",
+                location: "Pasuruan", id: "FSR0005", wh: "FSR0005", docQty: 9520, docType: "DOC Layer",
+                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
+                sapData: { mort: 211, lastPop: 9309, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 22900, poItr: null, lastStok: 1415, statusKalang: "GROWTH", kebutuhanMinggu: 4100, sisaKebutuhan: 16400 }
+            },
+            { planNo: "PLAN-2026-008", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX A", id: "KDG-08", wh: "WH-KDG08", docQty: 22000, docType: "DOC Broiler Ross 308", age: 23 },
+            { planNo: "PLAN-2026-009", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX A", id: "KDG-09", wh: "WH-KDG09", docQty: 18000, docType: "DOC Broiler Cobb 500", age: 7 },
+            { planNo: "PLAN-2026-010", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX B", id: "KDG-10", wh: "WH-KDG10", docQty: 20000, docType: "DOC Broiler Ross 308", age: 11 },
+            { planNo: "PLAN-2026-018", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX A", id: "KDG-18", wh: "WH-KDG18", docQty: 25000, docType: "DOC Broiler Ross 308", age: 1 },
+            { planNo: "PLAN-2026-019", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX B", id: "KDG-19", wh: "WH-KDG19", docQty: 16000, docType: "DOC Broiler Cobb 500", age: 9 },
+            { planNo: "PLAN-2026-020", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX B", id: "KDG-20", wh: "WH-KDG20", docQty: 20000, docType: "DOC Broiler Ross 308", age: 7 },
+            // ── 5 plan CONTOH dari Excel "SIMULASI IBOCS v2.xlsx" (sheet Layout IBOCS, baris 1–5) untuk review angka perhitungan.
+            // Memakai tabel 'STD SAP' asli (std_sap_data.js) supaya hasilnya bisa dibandingkan langsung dengan Excel.
+            ...[
+                { no: "1000001", desc: "JG01-Silvy 1 S.1 (Update KHK, Panen Setelah Share, Seting Pakan)", manual: "2026-05-06" },
+                { no: "1000002", desc: "JG02-Jeane 1 S.1 (Update KHK, Panen Setelah Share, Tanpa Seting Pakan)", manual: "2026-05-06" },
+                { no: "1000003", desc: "JG03-Anto 1 S.1 (Update KHK, Panen Sebelum/Pas Share, Seting Pakan)", sap: "2026-05-03" },
+                { no: "1000004", desc: "JG01-Silvy 1 S.2 (Update KHK, Panen Sebelum/Pas Share, Tanpa Seting Pakan)", sap: "2026-05-03" },
+                { no: "1000005", desc: "JG02-Jeane 1 S.2 (Update KHK, Tanpa Panen, Seting Pakan)" },
+            ].map((r, i) => ({
+                planNo: r.no, fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi", location: "Contoh Excel",
+                id: `EXL-0${i + 1}`, wh: `EXL-0${i + 1}`, namaPlasma: r.desc, docQty: 17200, docType: "DOC Broiler", useStdSap: true,
+                tanggalCI: "30-Mar-26", lastPostingDate: "5-May-26", ageLastPosting: 36,
+                ageCurrent: Math.round((Date.now() - new Date(2026, 2, 30).getTime()) / 864e5), // Excel: Age Now = TODAY - Tanggal CI
+                // U/V (Date/Ekor manual) untuk plan 1-2; W/X (Date SAP/Ekor SAP dari Dokumen Harvest SAP B1) untuk plan 3-4
+                tanggalPanen: r.manual || undefined, ekorPanen: r.manual ? 8219 : undefined,
+                sapData: { mort: 716, bw: 2.016, fcr: 1.5486101581202447, pakanTerpakai: 52000, grpo: 55000, poItr: 2000, lastStok: 5000, targetBW: 2.2, tanggalHarvestSap: r.sap, ekorHarvestSap: r.sap ? 8219 : undefined }
+            })),
+        ];
+
+        // Dummy: Nama Plasma (Plan Description SAP) & Warehouse Name — di real app dari SAP
+        const _DUMMY_PLASMA = ["Budi Santoso", "Siti Rahayu", "Agus Wijaya", "Hendra Pratama", "Dewi Lestari", "Slamet Riyadi", "Yulianto", "Eko Prasetyo"];
+        _sapPlansPool.forEach((p, i) => {
+            if (!p.namaPlasma) p.namaPlasma = `Plasma ${_DUMMY_PLASMA[i % _DUMMY_PLASMA.length]}`;
+            if (!p.whName) p.whName = `Gudang ${p.location ?? p.farm} ${p.id}`;
+        });
+
+        const HARVEST_DAY = 35;
+
+        // ─── KALKULASI ────────────────────────────────────────────────────────────
+        function calcFeedNeed(plan) {
+            const { docQty } = plan;
+            const age = plan.ageCurrent ?? plan.age;
+            const phaseResults = PHASES.map((ph, idx) => {
+                const startDay = Math.max(ph.dayFrom, age + 1);
+                const endDay = Math.min(ph.dayTo, HARVEST_DAY);
+                if (startDay > endDay) return { phaseIdx: idx, qty: 0, avgVitality: null, avgFeedCons: null, days: 0, skipped: true };
+
+                let totalQty = 0, sumV = 0, sumFc = 0, count = 0;
+                for (let d = startDay; d <= endDay; d++) {
+                    const row = STD[d - 1];
+                    totalQty += docQty * (row.v / 100) * row.fd;
+                    sumV += row.v;
+                    sumFc += row.fd;
+                    count++;
+                }
+                return { phaseIdx: idx, qty: totalQty, avgVitality: sumV / count, avgFeedCons: sumFc / count, days: count, skipped: false };
+            });
+            const totalQty = phaseResults.reduce((s, r) => s + r.qty, 0);
+            return { phaseResults, totalQty };
+        }
+
+        function fmt(n, dec = 0) { return n.toLocaleString("id-ID", { minimumFractionDigits: dec, maximumFractionDigits: dec }); }
+
+        // "Nama Plasma" = Plan Description di SAP (TOP, AYM, dst.)
+        function getPlanDescription(plan) {
+            if (!plan) return "-";
+            if (plan.namaPlasma) return plan.namaPlasma;
+            if (plan.planDesc || plan.planDescription) return plan.planDesc || plan.planDescription;
+            return [plan.location ?? plan.farm, plan.id].filter(Boolean).join(" / ") || "-";
+        }
+
+        // "Nama Unit" = unit/lokasi plan di SAP (sebelumnya label "Location")
+        function getNamaUnit(plan) { return plan.location ?? plan.farm ?? "-"; }
+
+        // Warehouse Name (bukan kode)
+        function getWhName(plan) { return plan.whName || `Gudang ${getNamaUnit(plan)}`; }
+
+        // Mortality Actual = Mort / (Populasi + Bonus)
+        function getMortActual(plan) {
+            const sap = sapMock(plan, calcFeedNeed(plan));
+            const pct = sap.formula.popBonus > 0 ? sap.mort / sap.formula.popBonus * 100 : 0;
+            return { ekor: sap.mort, pct };
+        }
+
+        function escHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, ch => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            }[ch]));
+        }
+
+        function tip(valueHtml, lines) {
+            return `<span class="formula-tip" data-tip="${escHtml(lines.join("\n"))}">${valueHtml}</span>`;
+        }
+
+        function fmtDate(date) {
+            return date.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+        }
+
+        function parsePlanDate(value) {
+            if (!value) return null;
+            const iso = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/); // yyyy-mm-dd dari input date (hindari geser zona waktu)
+            if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+            const parsed = new Date(value);
+            if (!Number.isNaN(parsed.getTime())) return parsed;
+
+            const match = String(value).match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
+            if (!match) return null;
+            const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+            const month = months[match[2]];
+            if (month === undefined) return null;
+            const year = match[3].length === 2 ? 2000 + parseInt(match[3], 10) : parseInt(match[3], 10);
+            return new Date(year, month, parseInt(match[1], 10));
+        }
+
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
+        // Diff pada Excel (kolom AC / AY) = Date - TODAY
+        function daysFromToday(date) {
+            const t = new Date();
+            return diffDays(new Date(t.getFullYear(), t.getMonth(), t.getDate()), date);
+        }
+
+        function diffDays(fromDate, toDate) {
+            const msPerDay = 24 * 60 * 60 * 1000;
+            return Math.round((toDate - fromDate) / msPerDay);
+        }
+
+        function ceilTo(n, step = 50) {
+            return Math.ceil(n / step) * step;
+        }
+
+        // Plan contoh dari Excel memakai tabel 'STD SAP' asli (std_sap_data.js); plan lain tetap memakai STD ringkas di atas.
+        let _useStdSap = false;
+        let _stdSapRows = null;
+
+        function getStdRows() {
+            if (_useStdSap && typeof STD_SAP !== "undefined") {
+                if (!_stdSapRows) _stdSapRows = STD_SAP.age.map((a, i) => ({ age: a, bw: STD_SAP.bw[i], fiCum: STD_SAP.fi[i] }));
+                return _stdSapRows;
+            }
+            let cumFi = 0;
+            return STD.map(row => {
+                cumFi += row.fd || 0;
+                return {
+                    age: row.d,
+                    bw: row.bw ?? (0.045 + row.d * 0.055),
+                    fiCum: row.fiCum ?? cumFi
+                };
+            });
+        }
+
+        function lookupStdByTargetBW(targetBW) {
+            const rows = getStdRows();
+            return rows.find(row => row.bw >= targetBW) || rows[rows.length - 1];
+        }
+
+        function lookupStdByCumFi(cumFi, matchMode = 1) {
+            const rows = getStdRows();
+            if (matchMode === -1) {
+                let found = rows[0];
+                rows.forEach(row => { if (row.fiCum <= cumFi) found = row; });
+                return found;
+            }
+            return rows.find(row => row.fiCum >= cumFi) || rows[rows.length - 1];
+        }
+
+        function lookupCumFiByAge(age) {
+            const rows = getStdRows();
+            const maxAge = _useStdSap ? rows[rows.length - 1].age : HARVEST_DAY;
+            const safeAge = Math.max(_useStdSap ? 0 : 1, Math.min(maxAge, Math.round(age)));
+            return (rows.find(row => row.age === safeAge) || rows[rows.length - 1]).fiCum;
+        }
+
+        // ─── FILTER STATE ─────────────────────────────────────────────────────────
+        let _activeCompany = "ALL"; // set dari URL param
+
+        // ─── RENDER BY COMPANY ────────────────────────────────────────────────────
+        function renderPlanCards() {
+            renderSummary();
+            renderFilters();
+
+            const visiblePlans = getVisiblePlans();
+            if (visiblePlans.length === 0) {
+                document.getElementById("plansContainer").innerHTML = `
+                    <div style="text-align:center;padding:60px 24px;border:2px dashed #e0e7ef;border-radius:12px;background:#fafbfe;">
+                        <i class="bi bi-inbox" style="font-size:40px;color:#c7d2fe;display:block;margin-bottom:16px;"></i>
+                        <div style="font-size:16px;font-weight:700;color:#1a237e;margin-bottom:8px;">Tidak Ada Plan</div>
+                        <div style="font-size:13px;color:#6b7280;">Tidak ada plan yang sesuai dengan filter Nama Unit / Kandang.</div>
+                    </div>`;
+                return;
+            }
+
+            const companies = [...new Set(visiblePlans.map(p => p.company))];
+
+            document.getElementById("plansContainer").innerHTML = companies.map(company => {
+                // Kolom mengikuti urutan sheet "Layout IBOCS" (huruf = kolom Excel). "Kebutuhan Minggu Depan" (AK) kosong di Excel → tidak ditampilkan.
+                const num = (v, d = 0) => v != null && v !== "" ? fmt(Number(v), d) : "-";
+                const COLS = [
+                    { l: "Populasi", x: "D", c: (p, s) => `<b>${tip(num(s.formula.popBonus), ["Populasi (sudah termasuk bonus)", "= Populasi DOC x 1,01", `= ${fmt(p.docQty)} x 1,01`])}</b>` },
+                    { l: "Tanggal CI", x: "E", calc: 1, c: (p, s) => s.tanggalCIStr },
+                    { l: "Kebutuhan Pakan", x: "F", calc: 1, c: (p, s) => `<b style="color:#1a237e;">${tip(num(s.kebutuhanMinggu) + " kg", ["Kebutuhan Pakan", "= CEILING(FI Cum STD SAP (BW Panen) x Populasi, 50)", `= CEILING(${fmt(s.fiCum, 3)} x ${fmt(s.formula.popBonus)}, 50)`, `= ${fmt(s.kebutuhanMinggu)} kg`])}</b>` },
+
+                    { g: "Status Last Posting", l: "Last Posting Date", x: "G", c: (p, s) => s.lastPostStr },
+                    { g: "Status Last Posting", l: "Age", x: "H", c: (p, s) => tip(s.formula.ageLastPosting, ["Age", "= Last Posting Date - Tanggal CI", `= ${s.lastPostStr} - ${s.tanggalCIStr}`]) },
+                    { g: "Status Last Posting", l: "Mort ekor", x: "I", c: (p, s) => num(s.mort) },
+                    { g: "Status Last Posting", l: "Last Populasi", x: "J", c: (p, s) => tip(num(s.lastPop), ["Last Populasi", "= Populasi - Mort", `= ${fmt(s.formula.popBonus)} - ${fmt(s.mort)}`]) },
+                    { g: "Status Last Posting", l: "BW", x: "K", c: (p, s) => s.bw != null ? num(parseFloat(s.bw), 3) : "-" },
+                    { g: "Status Last Posting", l: "FCR", x: "L", c: (p, s) => s.fcr != null ? tip(num(s.fcr, 3), ["FCR", "= GI / BW / Last Populasi", `= ${fmt(s.gi)} / ${num(parseFloat(s.bw), 3)} / ${fmt(s.lastPop)}`]) : "-" },
+                    { g: "Status Last Posting", l: "Diff FCR", x: "M", c: (p, s) => s.diffFcr != null ? tip(num(s.diffFcr, 3), ["Diff FCR", "= FCR - FCR STD SAP (pada BW yang sama)"]) : "-" },
+                    { g: "Status Last Posting", l: "FI Act", x: "N", c: (p, s) => tip(num(s.fiAct, 3), ["FI Act", "= ROUND(GI / Populasi, 3)", `= ${fmt(s.gi)} / ${fmt(s.formula.popBonus)}`]) },
+                    { g: "Status Last Posting", l: "FI Cum Pakan Terima", x: "O", c: (p, s) => tip(num(s.fiCumTerima, 3), ["FI Cum Pakan Terima", "= ROUND((GRPO/IT + PO/ITR) / Populasi, 3)", `= (${fmt(s.grpo)} + ${fmt(s.formula.poItrCalc)}) / ${fmt(s.formula.popBonus)}`]) },
+                    { g: "Status Last Posting", l: "GRPO/IT", x: "P", c: (p, s) => num(s.grpo) },
+                    { g: "Status Last Posting", l: "PO/ITR", x: "Q", c: (p, s) => num(s.poItr) },
+                    { g: "Status Last Posting", l: "GI", x: "R", c: (p, s) => num(s.gi) },
+                    { g: "Status Last Posting", l: "Last Stok", x: "S", c: (p, s) => tip(num(s.lastStok), ["Last Stok", "= GRPO/IT + PO/ITR - GI", `= ${fmt(s.grpo)} + ${fmt(s.formula.poItrCalc)} - ${fmt(s.gi)}`]) },
+
+                    { l: "Age Now", x: "T", c: (p, s) => tip(s.ageNow, ["Age Now", "= Hari Ini - Tanggal CI"]) },
+
+
+
+                    { l: "BW PANEN", x: "AJ", c: (p, s) => s.bwPanen },
+                    { l: "Sisa Kebutuhan", x: "AL", c: (p, s) => `<b style="color:#92400e;">${tip(num(s.sisaKebutuhan) + " kg", ["Sisa Kebutuhan", "= Kebutuhan Pakan - GRPO/IT - PO/ITR", `= ${fmt(s.kebutuhanMinggu)} - ${fmt(s.grpo)} - ${fmt(s.formula.poItrCalc)}`, `= ${fmt(s.formula.sisaKebutuhanRaw)} kg`])}</b>` },
+                ];
+
+                // Baris 1 = grup (colspan) atau kolom tunggal (rowspan 2); baris 2 = sub-kolom
+                const thCls = c => c.yellow ? "th-yellow" : c.calc ? "th-calc" : "";
+                let row1 = "", row2 = "";
+                for (let i = 0; i < COLS.length;) {
+                    const c = COLS[i];
+                    if (!c.g) { row1 += `<th rowspan="2" class="${thCls(c)}" title="Kolom ${c.x}">${c.l}</th>`; i++; continue; }
+                    let j = i; while (j < COLS.length && COLS[j].g === c.g) j++;
+                    row1 += `<th colspan="${j - i}">${c.g}</th>`;
+                    for (let k = i; k < j; k++) row2 += `<th class="${thCls(COLS[k])}" title="Kolom ${COLS[k].x}">${COLS[k].l}</th>`;
+                    i = j;
+                }
+                const tableHeader = `
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="sticky-col sticky-check" style="text-align:center;"><input type="checkbox" onchange="toggleAllBulk(this, '${company}')"></th>
+                            <th rowspan="2" class="sticky-col sticky-plan">No Plan</th>
+                            <th rowspan="2" class="sticky-col sticky-desc">Nama Plasma</th>
+                            <th rowspan="2" class="sticky-col sticky-location">Nama Unit</th>
+                            <th rowspan="2" class="sticky-col sticky-kandang">Kandang</th>
+                            ${row1}
+                            <th rowspan="2" style="min-width:80px;">Aksi</th>
+                        </tr>
+                        <tr>${row2}</tr>
+                    </thead>`;
+
+                const plans = visiblePlans.filter(p => p.company === company);
+                const totalPop = plans.reduce((s, p) => s + p.docQty, 0);
+                const totalKebutuhan = plans.reduce((s, p) => s + Math.round(sapMock(p, calcFeedNeed(p)).kebutuhanMinggu), 0);
+
+                const rows = plans.map(plan => {
+                    const calc = calcFeedNeed(plan);
+                    const sap = sapMock(plan, calc);
+                    const safeCompanyKey = company.replace(/\s+/g, '-');
+                    const isChecked = _selectedPlansForBulk.includes(plan.planNo) ? "checked" : "";
+                    const periodGuard = canSubmitForecast(plan.planNo, getSelectedPeriod());
+                    const isDisabled = periodGuard.ok ? "" : "disabled";
+                    const disabledMsg = !periodGuard.ok ? `title="${periodGuard.reason}"` : "";
+                    const blockReason = !periodGuard.ok ? "Sudah ada forecast" : "";
+
+                    return `<tr>
+                        <td class="sticky-col sticky-check" style="text-align:center;">
+                            <input type="checkbox" class="cb-bulk-${safeCompanyKey}" value="${plan.planNo}" onchange="toggleBulk('${plan.planNo}', this.checked)" ${isChecked} ${isDisabled} ${disabledMsg}>
+                            ${blockReason ? `<div style="font-size:9px;color:#f87171;margin-top:2px;white-space:nowrap;">${blockReason}</div>` : ""}
+                        </td>
+                        <td class="sticky-col sticky-plan" style="font-weight:700;color:#1a237e;white-space:nowrap;">${plan.planNo}</td>
+                        <td class="sticky-col sticky-desc" style="font-weight:600;color:#374151;">${escHtml(getPlanDescription(plan))}</td>
+                        <td class="sticky-col sticky-location" style="white-space:nowrap;">${escHtml(getNamaUnit(plan))}</td>
+                        <td class="sticky-col sticky-kandang">${plan.id}</td>
+                        ${COLS.map(c => `<td class="${c.yellow ? "td-yellow" : ""}">${c.c(plan, sap)}</td>`).join("")}
+                        <td style="white-space:nowrap;">
+                            <button class="btn-info-plan me-1" onclick="openPlanInfo('${plan.planNo}')"><i class="bi bi-info-circle"></i></button>
+                            <a href="customer_ForecastView.html?planNo=${plan.planNo}" class="btn-info-plan" style="display:inline-flex;align-items:center;text-decoration:none;gap:3px;"><i class="bi bi-eye"></i> View</a>
+                        </td>
+                    </tr>`;
+                }).join("");
+
+                return `<div class="company-section">
+                    <div class="company-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="company-name"><i class="bi bi-building me-2"></i>${company}</div>
+                            <span class="company-stat">${plans.length} plan</span>
+                            <span class="company-stat">·</span>
+                            <span class="company-stat">${fmt(totalPop)} ekor</span>
+                            <span class="company-stat">·</span>
+                            <span class="company-stat">Kebutuhan: ${fmt(totalKebutuhan)} kg</span>
+                        </div>
+                    </div>
+                    <div class="company-table-wrap">
+                        <div style="overflow-x:auto;">
+                            <table class="matrix-table" style="width:auto;min-width:100%;">
+                                ${tableHeader}
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+            }).join("");
+            initFormulaTooltips();
+        }
+
+
+        // ─── SAP MOCK DATA ────────────────────────────────────────────────────────
+        function initFormulaTooltips() {
+            let popover = document.getElementById("formulaPopover");
+            if (!popover) {
+                popover = document.createElement("div");
+                popover.id = "formulaPopover";
+                popover.className = "formula-popover";
+                document.body.appendChild(popover);
+            }
+
+            const placePopover = (target) => {
+                const rect = target.getBoundingClientRect();
+                const popRect = popover.getBoundingClientRect();
+                let left = rect.left + (rect.width / 2) - (popRect.width / 2);
+                let top = rect.top - popRect.height - 12;
+
+                left = Math.max(12, Math.min(left, window.innerWidth - popRect.width - 12));
+                if (top < 12) top = rect.bottom + 12;
+
+                popover.style.left = `${left}px`;
+                popover.style.top = `${top}px`;
+            };
+
+            document.querySelectorAll(".formula-tip").forEach(el => {
+                el.onmouseenter = () => {
+                    popover.textContent = el.dataset.tip || "";
+                    popover.classList.add("show");
+                    placePopover(el);
+                };
+                el.onmousemove = () => placePopover(el);
+                el.onmouseleave = () => popover.classList.remove("show");
+            });
+        }
+
+        function sapMock(plan, calc) {
+            _useStdSap = !!plan.useStdSap;
+            const sd = plan.sapData || {};
+            const ageLastPosting = plan.ageLastPosting ?? plan.age ?? plan.ageCurrent ?? 0;
+            const lastPostingDate = parsePlanDate(plan.lastPostingDate) || new Date(2026, 3, 20);
+            const tanggalCI = parsePlanDate(plan.tanggalCI) || addDays(lastPostingDate, -ageLastPosting);
+            const ageNow = plan.ageCurrent ?? plan.age ?? diffDays(tanggalCI, new Date());
+            const popBonus = sd.popBonus ?? plan.popBonus ?? (plan.docQty * 1.01);
+            const mort = sd.mort ?? Math.round(plan.docQty * 0.003 * ageLastPosting);
+            const lastPop = sd.lastPop ?? Math.max(0, Math.round(popBonus - mort));
+            const bw = sd.bw ?? (0.045 + ageLastPosting * 0.055).toFixed(3);
+            const fcr = sd.fcr ?? null;
+            const fiAct = sd.fiAct ?? +(sd.pakanTerpakai ? sd.pakanTerpakai / Math.max(popBonus, 1) : (0.045 + ageLastPosting * 0.055)).toFixed(3);
+            const pakanTerpakai = sd.pakanTerpakai
+                ?? (fcr != null && bw != null ? fcr * lastPop * parseFloat(bw) : fiAct * popBonus);
+            const targetBW = sd.targetBW ?? plan.targetBW ?? 1.8;
+            const targetStd = lookupStdByTargetBW(targetBW);
+            const fiCum = targetStd.fiCum;
+            const grpo = sd.grpo ?? Math.ceil(pakanTerpakai / 1000);
+            const poItr = sd.poItr !== undefined ? sd.poItr : Math.max(0, grpo + 2);
+            const poItrCalc = poItr ?? 0;
+            const lastStok = sd.lastStok !== undefined ? sd.lastStok : Math.max(0, (grpo + poItrCalc) - pakanTerpakai);
+            const kebutuhanMinggu = ceilTo(popBonus * fiCum, 50);
+            const sisaKebutuhanRaw = kebutuhanMinggu - (grpo + poItrCalc);
+            const sisaKebutuhan = Math.max(0, sisaKebutuhanRaw);
+
+            // Panen Parsial = input manual user (Excel kolom U/V). Kosong → tidak ada panen parsial:
+            // usia sampai panen = age last posting, ekor = 0. Tanggal <= last posting tidak menggeser usia.
+            // U/V = input manual user; W/X = otomatis dari Dokumen Harvest SAP B1 (kosong bila belum ada dokumen).
+            //   Z  = IF(OR(MAX(U,W) < LastPosting, keduanya kosong), Age LastPosting, MAX(U,W) - CI)
+            //   Y  = Last Populasi - V - X
+            //   AD = IF(OR(U = "", U <= LastPosting), FI Act, ...)   → hanya tanggal manual (U) yang dipakai, sesuai Excel
+            const manualDate = parsePlanDate(plan.tanggalPanen);
+            const manualEkor = Math.max(0, parseFloat(plan.ekorPanen) || 0);
+            const sapDate = parsePlanDate(sd.tanggalHarvestSap);
+            const sapEkor = Math.max(0, parseFloat(sd.ekorHarvestSap) || 0);
+            const panenDate = [manualDate, sapDate].filter(Boolean).sort((a, b) => b - a)[0] || null; // MAX(U,W)
+            const usiaAkhir = panenDate && panenDate >= lastPostingDate
+                ? Math.max(ageLastPosting, diffDays(tanggalCI, panenDate))
+                : ageLastPosting;
+            const panenEkor = manualEkor + sapEkor;
+            const stockAkhir = Math.max(0, lastPop - panenEkor);
+            // Excel AD: tanpa panen parsial (atau tanggal <= last posting) FI Cum sampai panen = FI Act
+            const hasParsial = !!manualDate && manualDate > lastPostingDate;
+            const ageFiAct = lookupStdByCumFi(fiAct, 1).age;
+            const cumFiSampaiPanen = hasParsial ? lookupCumFiByAge(ageFiAct + usiaAkhir - ageLastPosting) : fiAct;
+            const pakanPakaiSampaiPanen = stockAkhir > 0
+                ? Math.min(ceilTo(stockAkhir * Math.max(0, cumFiSampaiPanen - fiAct), 50), lastStok)
+                : 0;
+            const cumFiSisaPakan = stockAkhir > 0 ? +((lastStok - pakanPakaiSampaiPanen) / stockAkhir).toFixed(3) : 0;
+            const cumFiStdTotal = +(cumFiSampaiPanen + Math.max(0, cumFiSisaPakan)).toFixed(3);
+            const usiaCumFiStd1 = lookupStdByCumFi(cumFiStdTotal, 1).age;
+            const usiaCumFiStd2 = lookupStdByCumFi(cumFiSampaiPanen, 1).age;
+            const ageHabis = cumFiStdTotal <= cumFiSampaiPanen
+                ? usiaAkhir
+                : usiaCumFiStd1 - usiaCumFiStd2 + usiaAkhir;
+            const tglHabis = addDays(tanggalCI, ageHabis);
+            const pakanHabisDiff = daysFromToday(tglHabis);
+
+            // Estimasi habis setelah order (Excel: AZ..AX). Belum ada order di tabel → sama dengan pakan habis.
+            const forecastQty = sd.orderTotal ?? plan.orderTotal ?? 0;
+            const lastStokAfterForecast = lastStok + forecastQty;
+            const dailyFeedAfterCurrent = 0;
+            const extraDaysFromForecast = 0;
+            const ageEstimasiHabis = ageHabis;
+            const tglEstimasiHabis = addDays(tanggalCI, ageEstimasiHabis);
+            const estimasiHabisDiff = daysFromToday(tglEstimasiHabis);
+            const targetBWNum = parseFloat(targetBW) || 0;
+
+            // FI Cum Pakan Terima menurut Excel (kolom O) = (GRPO/IT + PO/ITR) / Populasi
+            const fiCumTerima = +((grpo + poItrCalc) / popBonus).toFixed(3);
+            // Diff FCR (Excel M) = FCR - FCR STD SAP pada BW yang sama; hanya tersedia bila tabel STD SAP dipakai
+            let diffFcr = null;
+            if (plan.useStdSap && fcr != null && typeof STD_SAP !== "undefined") {
+                const idx = STD_SAP.bw.findIndex(v => Math.abs(v - parseFloat(bw)) < 0.0005);
+                if (idx >= 0) diffFcr = fcr - STD_SAP.fcr[idx];
+            }
+            const result = {
+                mort, lastPop, bw, fcr, diffFcr, fiAct, fiCum, fiCumTerima, gi: pakanTerpakai,
+                panenManual: { dateStr: manualDate ? fmtDate(manualDate) : "", ekor: manualEkor }, grpo, poItr, ageNow, useStdSap: !!plan.useStdSap,
+                lastStok, kebutuhanMinggu, sisaKebutuhan,
+                hariHabis: pakanHabisDiff, tglHabisStr: fmtDate(tglHabis), ageHabis,
+                panenDateStr: panenDate ? fmtDate(panenDate) : "-", panenEkor, pakanHabisDiff,
+                harvestSap: { dateStr: sapDate ? fmtDate(sapDate) : "", ekor: sapEkor, has: !!(sapDate || sapEkor) },
+                tglEstimasiHabisStr: fmtDate(tglEstimasiHabis), ageEstimasiHabis, estimasiHabisDiff,
+                lastPostStr: plan.lastPostingDate || fmtDate(lastPostingDate),
+                statusKalang: "Released", pakanHabis: fmtDate(tglHabis), bwPanen: `${targetBWNum.toFixed(2)} kg`,
+                formula: {
+                    ageLastPosting, ageNow, popBonus, pakanTerpakai, targetBW: targetBWNum, poItrCalc, sisaKebutuhanRaw,
+                    stockAkhir, panenDateStr: panenDate ? fmtDate(panenDate) : "-", forecastQty, lastStokAfterForecast,
+                    dailyFeedAfterCurrent, extraDaysFromForecast,
+                    pakanPakaiSampaiPanen, cumFiSampaiPanen, cumFiStdTotal, usiaCumFiStd2, usiaCumFiStd1, cumFiSisaPakan, usiaAkhir
+                },
+                tanggalCI, tanggalCIStr: fmtDate(tanggalCI)
+            };
+            _useStdSap = false;
+            return result;
+        }
+
+        // ─── SUMMARY ──────────────────────────────────────────────────────────────
+        function renderSummary() {
+            const shown = getVisiblePlans();
+            const totalPlan = shown.length;
+            const totalPop = shown.reduce((s, p) => s + p.docQty, 0);
+            const totalKebutuhan = shown.reduce((s, p) => s + Math.round(sapMock(p, calcFeedNeed(p)).kebutuhanMinggu), 0);
+            const drafted = shown.filter(p => p.fcStatus === "Draft").length;
+            document.getElementById("summaryGrid").innerHTML = `
+                <div class="summary-box"><div class="lbl">Total Plan Aktif</div><div class="val" style="color:#1a237e;">${totalPlan}</div></div>
+                <div class="summary-box"><div class="lbl">Total Populasi</div><div class="val">${fmt(totalPop)}</div></div>
+                <div class="summary-box"><div class="lbl">Total Kebutuhan Pakan</div><div class="val" style="color:#166534;">${fmt(totalKebutuhan)} <span style="font-size:14px;font-weight:400;">kg</span></div></div>
+                <div class="summary-box"><div class="lbl">Belum Di-forecast</div><div class="val" style="color:#92400e;">${drafted}</div></div>`;
+        }
+
+        // ─── FORECAST WIZARD: Info → Input Order → Summary → Draft / Submit ──────
+        // Mengikuti Excel "Layout IBOCS": info sebelum order, blok ORDER (tanggal, item,
+        // jumlah, lokasi kirim — jumlah baris tidak dibatasi), lalu estimasi habis.
+        const DELIVERY_LOCATIONS = ["SIDOARJO", "SEMARANG", "SRAGEN", "CIREBON", "TULUNGAGUNG", "MAGELANG"];
+        let _rowSeq = 0;
+        let _reviewPhase = "info"; // info | order  (summary dipakai saat _reviewStep >= jumlah plan)
+        let _editingFcNo = null;
+
+        function todayISO() {
+            const d = new Date();
+            return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+        }
+
+        // Header dokumen — nanti menjadi header Purchase Order & Sales Order di SAP Business One
+        const PICKUP_LOCATIONS = DELIVERY_LOCATIONS;
+
+        function newHeader(extra) {
+            return Object.assign({ orderDate: todayISO(), pickupLocation: PICKUP_LOCATIONS[0] }, extra || {});
+        }
+
+        // Baris kosong terakhir selalu tersedia: begitu item terpilih, baris berikutnya muncul otomatis
+        function ensureTrailingRow(planNo) {
+            const orders = _reviewData[planNo].orders;
+            const last = orders[orders.length - 1];
+            if (!last || last.itemCode) orders.push(newOrderRow());
+        }
+
+        // Baris yang benar-benar diisi (baris kosong penampung tidak ikut disimpan)
+        function activeOrders(planNo) {
+            return _reviewData[planNo].orders.filter(r => r.itemCode || r.qty > 0);
+        }
+
+        function newOrderRow(extra) {
+            return Object.assign({ id: ++_rowSeq, itemCode: "", itemName: "", qty: 0, uom: "Kg" }, extra || {});
+        }
+
+        function headerSync(planNo, field, value) {
+            _reviewData[planNo].header[field] = value;
+        }
+
+        function orderTotalOf(planNo) {
+            return (_reviewData[planNo]?.orders || []).reduce((s, r) => s + (parseFloat(r.qty) || 0), 0);
+        }
+
+        function planSap(planNo) {
+            const plan = DEMO_PLANS.find(p => p.planNo === planNo);
+            return { plan, sap: sapMock(plan, calcFeedNeed(plan)) };
+        }
+
+        function startReviewFlow() {
+            if (_selectedPlansForBulk.length === 0) return;
+            _reviewPlans = [..._selectedPlansForBulk];
+            _reviewData = {};
+            _editingFcNo = null;
+            _reviewPlans.forEach(planNo => {
+                const p = DEMO_PLANS.find(x => x.planNo === planNo);
+                _reviewData[planNo] = {
+                    header: newHeader(), orders: [newOrderRow()], skipped: false,
+                    panen: { date: p?.tanggalPanen || "", ekor: p?.ekorPanen || 0 }
+                };
+            });
+            openWizard(0, "info");
+        }
+
+        function openWizard(step, phase) {
+            _reviewStep = step;
+            _reviewPhase = phase;
+            renderReviewStep();
+            const el = document.getElementById("reviewModal");
+            if (!_reviewModalInst) _reviewModalInst = new bootstrap.Modal(el);
+            _reviewModalInst.show();
+        }
+
+        function wizardStepper(active) {
+            const steps = ["Informasi Plan", "Input Order", "Summary"];
+            return `<div class="d-flex gap-2 flex-wrap px-3 pt-3">${steps.map((s, i) => `
+                <span class="badge ${i === active ? "bg-primary" : i < active ? "bg-success" : "bg-light text-muted border"}" style="font-size:12px;padding:7px 12px;">
+                    ${i + 1}. ${s}</span>`).join("")}</div>`;
+        }
+
+        // Kartu informasi plan (read-only, kecuali Panen Parsial yang diinput manual)
+        function wzField(label, value, unit) {
+            return `<div class="wz-f"><div class="k">${label}</div><div class="v">${value}${unit ? ` <small>${unit}</small>` : ""}</div></div>`;
+        }
+
+        function wzCard(icon, title, gridHtml, opts) {
+            const o = opts || {};
+            return `<div class="wz-card ${o.yellow ? "y" : ""}">
+                <div class="wz-card-h"><i class="bi ${icon}"></i>${title}${o.note ? `<span class="wz-note">${o.note}</span>` : ""}</div>
+                <div class="wz-grid ${o.cols || ""}">${gridHtml}</div></div>`;
+        }
+
+        function wzKpi(icon, label, value, sub, tone) {
+            return `<div class="wz-kpi ${tone}"><i class="bi ${icon}"></i>
+                <div><div class="k">${label}</div><div class="v">${value}</div>${sub ? `<div class="s">${sub}</div>` : ""}</div></div>`;
+        }
+
+        // Date SAP / Ekor SAP: read-only, muncul otomatis bila ada Dokumen Harvest di SAP B1
+        function sapHarvestField(label, value, unit) {
+            const has = value !== "";
+            return `<div class="wz-f" style="${has ? "background:#ecfdf5;" : ""}">
+                <div class="k">${label} <span class="wz-hint" style="color:#047857;">${has ? "dari Dokumen Harvest SAP B1" : "belum ada Dokumen Harvest"}</span></div>
+                <div class="v" style="${has ? "" : "color:#9ca3af;font-weight:500;"}">${has ? value : "—"}${has && unit ? ` <small>${unit}</small>` : ""}</div></div>`;
+        }
+
+        // Panen Parsial: input manual user (Excel kolom U "Date" dan V "Ekor")
+        function panenSync(planNo, field, value) {
+            const plan = DEMO_PLANS.find(p => p.planNo === planNo);
+            const data = _reviewData[planNo];
+            if (field === "date") { data.panen.date = value; plan.tanggalPanen = value || undefined; }
+            else { data.panen.ekor = Math.max(0, parseFloat(value) || 0); plan.ekorPanen = data.panen.ekor || undefined; }
+            renderReviewStep(); // Pakan Habis, stok setelah panen, dan estimasi ikut dihitung ulang
+        }
+
+        // Semua informasi plan sebelum order
+        function renderPlanInfoBlock(planNo) {
+            const { plan, sap } = planSap(planNo);
+            const f = sap.formula;
+            const pn = _reviewData[planNo].panen;
+            const kg = v => v != null ? fmt(v) : "-";
+            const kgU = v => v != null ? "kg" : "";
+            const diffTxt = d => `${d >= 0 ? "+" : ""}${d}`;
+            return `
+                ${wzCard("bi-person-vcard", "Identitas Plan",
+                    wzField("Nama Plasma", escHtml(getPlanDescription(plan))) +
+                    wzField("Tanggal CI", sap.tanggalCIStr) +
+                    wzField("Populasi", fmt(f.popBonus), "ekor"), { cols: "c3w" })}
+
+                <div class="wz-kpis">
+                    ${wzKpi("bi-box-seam", "Last Stok", `${fmt(sap.lastStok)} <small>kg</small>`, "Kolom S", "blue")}
+                    ${wzKpi("bi-clipboard-data", "Kebutuhan Pakan", `${fmt(sap.kebutuhanMinggu)} <small>kg</small>`, `BW Panen ${sap.bwPanen}`, "indigo")}
+                    ${wzKpi("bi-exclamation-diamond", "Sisa Kebutuhan", `${fmt(sap.sisaKebutuhan)} <small>kg</small>`, "Kebutuhan Pakan - GRPO/IT - PO/ITR", "amber")}
+                    ${wzKpi("bi-calendar-x", "Pakan Habis", sap.tglHabisStr, `Age ${sap.ageHabis} · Diff ${diffTxt(sap.pakanHabisDiff)}`, "red")}
+                </div>
+
+                ${wzCard("bi-clock-history", "Status Last Posting",
+                    wzField("Last Posting Date", sap.lastPostStr) + wzField("Age", f.ageLastPosting) +
+                    wzField("Mort", fmt(sap.mort), "ekor") + wzField("Last Populasi", fmt(sap.lastPop), "ekor") +
+                    wzField("BW", sap.bw != null ? fmt(parseFloat(sap.bw), 3) : "-", sap.bw != null ? "kg" : "") +
+                    wzField("FCR", sap.fcr != null ? fmt(sap.fcr, 3) : "-") +
+                    wzField("Diff FCR", sap.diffFcr != null ? fmt(sap.diffFcr, 3) : "-") +
+                    wzField("FI Act", sap.fiAct != null ? fmt(sap.fiAct, 3) : "-", sap.fiAct != null ? "kg" : "") +
+                    wzField("FI Cum Pakan Terima", fmt(sap.fiCumTerima ?? 0, 3), "kg") +
+                    wzField("GRPO/IT", kg(sap.grpo), kgU(sap.grpo)) + wzField("PO/ITR", kg(sap.poItr), kgU(sap.poItr)) +
+                    wzField("GI", kg(sap.gi), kgU(sap.gi)) +
+                    wzField("Age Now", sap.ageNow) + wzField("BW Panen", sap.bwPanen.replace(" kg", ""), "kg"))}
+
+                <div class="wz-card y">
+                    <div class="wz-card-h"><i class="bi bi-scissors"></i>Panen Parsial
+                        <span class="wz-note">Date &amp; Ekor: input manual · Date SAP &amp; Ekor SAP: otomatis dari Dokumen Harvest SAP B1</span></div>
+                    <div class="wz-grid">
+                        <div class="wz-f"><div class="k">Date <span class="wz-hint">tanggal terakhir panen</span></div>
+                            <input type="date" class="form-control form-control-sm" value="${pn.date || ""}" onchange="panenSync('${planNo}','date',this.value)"></div>
+                        <div class="wz-f"><div class="k">Ekor <span class="wz-hint">perkiraan ekor harvest yang telah diinfokan</span></div>
+                            <input type="number" min="0" step="1" class="form-control form-control-sm" placeholder="0" value="${pn.ekor || ""}" onchange="panenSync('${planNo}','ekor',this.value)"></div>
+                        ${sapHarvestField("Date SAP", sap.harvestSap.has && sap.harvestSap.dateStr ? sap.harvestSap.dateStr : "", "")}
+                        ${sapHarvestField("Ekor SAP", sap.harvestSap.ekor ? fmt(sap.harvestSap.ekor) : "", "ekor")}
+                        ${wzField("Stok setelah Panen", fmt(f.stockAkhir), "ekor")}
+                        ${wzField("Usia smp Panen", f.usiaAkhir)}
+                    </div>
+                </div>
+
+                ${wzCard("bi-hourglass-split", "Pakan Habis",
+                    wzField("Date", sap.tglHabisStr) + wzField("Age", sap.ageHabis) + wzField("Diff", diffTxt(sap.pakanHabisDiff)) +
+                    wzField("FI CUM Panen", fmt(f.cumFiSampaiPanen, 3), "kg") + wzField("Pakan Sampai Panen", fmt(f.pakanPakaiSampaiPanen), "kg") +
+                    wzField("FI CUM Sisa Pakan", fmt(f.cumFiSisaPakan, 3), "kg") + wzField("FI CUM TOTAL", fmt(f.cumFiStdTotal, 3), "kg") +
+                    wzField("USIA FI CUM PANEN", f.usiaCumFiStd2) + wzField("USIA FI CUM TOTAL", f.usiaCumFiStd1))}`;
+        }
+
+        function renderReviewStep() {
+            const total = _reviewPlans.length;
+            if (_reviewStep >= total) { renderReviewSummary(); return; }
+
+            const planNo = _reviewPlans[_reviewStep];
+            const plan = DEMO_PLANS.find(p => p.planNo === planNo);
+            _reviewData[planNo].skipped = false; // kembali ke plan yang tadi dilewati = ikut lagi
+            const guard = canSubmitForecast(planNo, getSelectedPeriod(), _editingFcNo);
+            const isInfo = _reviewPhase === "info";
+            const isFirst = _reviewStep === 0 && isInfo;
+            const isLast = _reviewStep === total - 1 && !isInfo;
+
+            document.getElementById("reviewModalTitle").innerHTML =
+                `<i class="bi bi-clipboard2-check me-2"></i>Forecast — Plan ${_reviewStep + 1} / ${total} · ${plan.planNo} · ${getNamaUnit(plan)} / ${plan.id}
+                <span class="badge bg-light text-primary ms-2">${getSelectedPeriod()}</span>`;
+
+            const guardHtml = !guard.ok
+                ? `<div class="alert alert-warning mx-3 mt-3 mb-0 py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>${guard.reason} — Plan ini akan dilewati saat disimpan.</div>`
+                : "";
+
+            document.getElementById("reviewModalBody").innerHTML = `
+                ${wizardStepper(isInfo ? 0 : 1)}${guardHtml}
+                <div class="p-3">${isInfo ? renderPlanInfoBlock(planNo) : renderOrderStep(planNo)}</div>`;
+            if (!isInfo) refreshOrderPreview(planNo);
+
+            document.getElementById("reviewModalFooter").innerHTML = `
+                <div class="ms-auto d-flex gap-2">
+                    ${!isFirst ? `<button class="btn btn-outline-secondary btn-sm fw-bold" onclick="reviewPrev()"><i class="bi bi-arrow-left me-1"></i>Sebelumnya</button>` : ""}
+                    <button class="btn btn-primary btn-sm fw-bold px-4" onclick="reviewNext()">
+                        ${isInfo ? `Input Order <i class="bi bi-arrow-right ms-1"></i>`
+                    : isLast ? `<i class="bi bi-list-check me-1"></i>Lihat Summary` : `Plan Berikutnya <i class="bi bi-arrow-right ms-1"></i>`}
+                    </button>
+                </div>`;
+        }
+
+        function renderOrderStep(planNo) {
+            const { sap } = planSap(planNo);
+            const ref = (l, v, c) => `<div class="col-6 col-md-3"><div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:7px 10px;">
+                <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;">${l}</div>
+                <div style="font-size:14px;font-weight:700;color:${c || "#111"};">${v}</div></div></div>`;
+            return `
+                <div class="row g-2 mb-3">
+                    ${ref("Last Stok", fmt(sap.lastStok) + " kg")}
+                    ${ref("Kebutuhan Pakan",fmt(sap.kebutuhanMinggu) + " kg", "#1a237e")}
+                    ${ref("Sisa Kebutuhan", fmt(sap.sisaKebutuhan) + " kg", "#92400e")}
+                    ${ref("Pakan Habis", `${sap.tglHabisStr} · Age ${sap.ageHabis}`)}
+                </div>
+                ${renderHeaderForm(planNo)}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="fw-bold" style="font-size:13px;"><i class="bi bi-box-seam me-1 text-primary"></i>Item Order</div>
+                </div>
+                <div id="orderRows">${renderOrderRows(planNo)}</div>
+                <div id="orderPreview" class="mt-3"></div>`;
+        }
+
+        // Header dokumen: berlaku untuk seluruh item order (→ header PO & SO di SAP B1)
+        function renderHeaderForm(planNo) {
+            const h = _reviewData[planNo].header;
+            const opts = (list, cur) => list.map(l => `<option ${l === cur ? "selected" : ""}>${l}</option>`).join("");
+            const lbl = `font-size:10px;font-weight:700;color:#1a237e;text-transform:uppercase;`;
+            return `<div class="mb-3" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;">
+                <div class="row g-2">
+                    <div class="col-12 col-md-6"><label class="form-label mb-1" style="${lbl}">Tanggal Order</label>
+                        <input type="date" class="form-control form-control-sm" value="${h.orderDate}" onchange="headerSync('${planNo}','orderDate',this.value)"></div>
+                    <div class="col-12 col-md-6"><label class="form-label mb-1" style="${lbl}">Lokasi Pengambilan</label>
+                        <select class="form-select form-select-sm" onchange="headerSync('${planNo}','pickupLocation',this.value)">${opts(PICKUP_LOCATIONS, h.pickupLocation)}</select></div>
+                </div></div>`;
+        }
+
+        function renderOrderRows(planNo) {
+            const orders = _reviewData[planNo]?.orders || [];
+            if (!orders.length) return `<div class="text-center text-muted py-3 small border rounded">Belum ada order.</div>`;
+            const inp = `class="form-control form-control-sm"`;
+            return `<div class="table-responsive"><table class="table table-sm align-middle mb-0" style="font-size:12px;min-width:520px;">
+                <thead class="table-light"><tr><th style="width:30px;">#</th><th>Item Pakan</th>
+                <th style="width:140px;" class="text-end">Jumlah (Kg)</th><th style="width:36px;"></th></tr></thead>
+                <tbody>${orders.map((r, idx) => `<tr>
+                    <td class="fw-bold text-muted">${idx + 1}</td>
+                    <td><button class="btn btn-sm btn-outline-secondary w-100 text-start" style="font-size:12px;" onclick="openItemSearchReview('${planNo}',${r.id})">
+                        ${r.itemCode ? `<span class="fw-bold">${escHtml(r.itemName)}</span> <span class="text-muted">· ${escHtml(r.itemCode)}</span>` : `<i class="bi bi-search me-1"></i>Pilih item pakan`}</button></td>
+                    <td><input type="number" min="0" ${inp} style="text-align:right;" value="${r.qty || ""}" oninput="orderSync('${planNo}',${r.id},'qty',this.value)"></td>
+                    <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="orderRemoveRow('${planNo}',${r.id})"><i class="bi bi-trash"></i></button></td>
+                </tr>`).join("")}</tbody></table></div>`;
+        }
+
+        // Estimasi habis setelah order — sama dengan kolom AZ..AX pada Excel
+        function calcEstimateAfterOrder(sap, orderTotal) {
+            _useStdSap = !!sap.useStdSap;
+            try { return calcEstimateCore(sap, orderTotal); } finally { _useStdSap = false; }
+        }
+
+        function calcEstimateCore(sap, orderTotal) {
+            const f = sap.formula;
+            const sisaPakan = sap.lastStok + orderTotal - f.pakanPakaiSampaiPanen;      // AZ
+            const fiCumSisa = f.stockAkhir > 0 ? +(sisaPakan / f.stockAkhir).toFixed(3) : 0; // BA
+            const fiCumTotal = +(fiCumSisa + f.cumFiSampaiPanen).toFixed(3);            // BB
+            const usiaTotal = lookupStdByCumFi(fiCumTotal, 1).age;                      // BC
+            const age = fiCumTotal <= f.cumFiStdTotal ? sap.ageHabis : usiaTotal + sap.ageHabis - f.usiaCumFiStd2; // AX
+            const date = addDays(sap.tanggalCI, age);                                    // AW
+            return {
+                date, age, diff: daysFromToday(date),                                    // AW, AX, AY (Diff = Date - Hari Ini)
+                sisaPakan, fiCumSisa, fiCumTotal, usiaTotal,                             // AZ, BA, BB, BC
+                addDays: age - sap.ageHabis, stokAfter: sap.lastStok + orderTotal
+            };
+        }
+
+        function estimateHtml(sap, total, compact) {
+            const est = calcEstimateAfterOrder(sap, total);
+            // Kolom Excel: AW Date · AX Age · AY Diff · AZ Total Pakan Sisa · BA FI Cum Sisa Pakan · BB FI CUM Total · BC Usia FI CUM Total
+            const cell = (l, v, c, sub) => `<div class="col-6 col-md-3"><div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">${l}</div>
+                <div style="font-size:${compact ? 13 : 15}px;font-weight:700;color:${c || "#111"};">${v}</div>${sub ? `<div style="font-size:10px;color:#6b7280;">${sub}</div>` : ""}</div>`;
+            return `<div class="row g-2">
+                ${cell("Total Order", fmt(total) + " kg", "#1a237e")}
+                ${cell("Date", fmtDate(est.date), "#166534")}
+                ${cell("Age", est.age, "#166534", `${est.addDays >= 0 ? "+" : ""}${est.addDays} dari Pakan Habis`)}
+                ${cell("Diff", est.diff, "#166534")}
+                ${cell("Total Pakan Sisa", fmt(est.sisaPakan) + " kg")}
+                ${cell("FI Cum Sisa Pakan", fmt(est.fiCumSisa, 3))}
+                ${cell("FI Cum Total", fmt(est.fiCumTotal, 3))}
+                ${cell("Usia FI Cum Total", est.usiaTotal)}
+            </div>`;
+        }
+
+        function refreshOrderPreview(planNo) {
+            const box = document.getElementById("orderPreview");
+            if (!box) return;
+            const { sap } = planSap(planNo);
+            box.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">
+                    <i class="bi bi-calendar-check me-1"></i>Estimasi Habis Kapan (setelah order)</div>
+                ${estimateHtml(sap, orderTotalOf(planNo))}</div>`;
+        }
+
+        function orderRemoveRow(planNo, id) {
+            _reviewData[planNo].orders = _reviewData[planNo].orders.filter(r => r.id !== id);
+            ensureTrailingRow(planNo);
+            document.getElementById("orderRows").innerHTML = renderOrderRows(planNo);
+            refreshOrderPreview(planNo);
+        }
+
+        function orderSync(planNo, id, field, value) {
+            const row = _reviewData[planNo]?.orders.find(r => r.id === id);
+            if (!row) return;
+            row[field] = field === "qty" ? Math.max(0, parseFloat(value) || 0) : value;
+            if (field === "qty") refreshOrderPreview(planNo); // tidak re-render input agar fokus tidak hilang
+        }
+
+        function reviewNext() {
+            if (_reviewPhase === "info" && _reviewStep < _reviewPlans.length) { _reviewPhase = "order"; }
+            else { _reviewStep++; _reviewPhase = "info"; }
+            renderReviewStep();
+        }
+        function reviewPrev() {
+            if (_reviewStep >= _reviewPlans.length) { _reviewStep = _reviewPlans.length - 1; _reviewPhase = "order"; }
+            else if (_reviewPhase === "order") { _reviewPhase = "info"; }
+            else if (_reviewStep > 0) { _reviewStep--; _reviewPhase = "order"; }
+            renderReviewStep();
+        }
+        function validateOrders(planNo) {
+            const orders = activeOrders(planNo);
+            const errs = [];
+            if (!orders.length) errs.push("belum ada item order");
+            const h = _reviewData[planNo].header;
+            if (!h.orderDate) errs.push("tanggal order kosong");
+            if (!h.pickupLocation) errs.push("lokasi pengambilan kosong");
+            orders.forEach((r, i) => {
+                if (!r.itemCode) errs.push(`order #${i + 1}: item pakan belum dipilih`);
+                if (!(r.qty > 0)) errs.push(`order #${i + 1}: jumlah harus > 0`);
+            });
+            return errs;
+        }
+
+        function toggleSumCard(head) { head.parentElement.classList.toggle("open"); }
+        function setAllSumCards(open) {
+            document.querySelectorAll("#reviewModalBody .sum-card").forEach(c => c.classList.toggle("open", open));
+        }
+
+        // Summary lengkap: info plan + dokumen order + estimasi habis (sebelum → sesudah order)
+        function renderReviewSummary() {
+            document.getElementById("reviewModalTitle").innerHTML =
+                `<i class="bi bi-list-check me-2"></i>Summary Forecast${_editingFcNo ? " — " + _editingFcNo : ""}`;
+            const period = getSelectedPeriod();
+            let willCreate = 0, grandTotal = 0;
+            const open = _reviewPlans.length === 1; // 1 plan → langsung terbuka; lebih dari 1 → ringkas, user expand per plan
+            const cards = _reviewPlans.map(planNo => {
+                const { plan, sap } = planSap(planNo);
+                const data = _reviewData[planNo];
+                const guard = canSubmitForecast(planNo, period, _editingFcNo);
+                const skip = !guard.ok;
+                const total = orderTotalOf(planNo);
+                if (!skip) { willCreate++; grandTotal += total; }
+                const f = sap.formula;
+                const est = calcEstimateAfterOrder(sap, total);
+                const hd = data.header;
+                const shown = activeOrders(planNo);
+                const itemRows = shown.length ? shown.map((r, i) => `<tr>
+                        <td class="text-muted">${i + 1}</td>
+                        <td>${r.itemCode ? `<b>${escHtml(r.itemName)}</b><div class="text-muted" style="font-size:10.5px;">${escHtml(r.itemCode)}</div>` : `<span class="text-danger">belum dipilih</span>`}</td>
+                        <td class="text-end fw-bold">${fmt(parseFloat(r.qty) || 0)} <small class="text-muted fw-normal">${r.uom}</small></td></tr>`).join("")
+                    : `<tr><td colspan="3" class="text-center text-muted py-3">Belum ada item order</td></tr>`;
+                const cell = (l, v, c) => `<div class="wz-f"><div class="k">${l}</div><div class="v" ${c ? `style="color:${c}"` : ""}>${v}</div></div>`;
+                return `<div class="sum-card ${skip ? "is-skip" : ""} ${open ? "open" : ""}">
+                    <div class="sum-head" onclick="toggleSumCard(this)">
+                        <div class="sum-ava"><i class="bi bi-house-door"></i></div>
+                        <div class="flex-grow-1" style="min-width:0;">
+                            <div class="sum-title">${escHtml(getPlanDescription(plan))}</div>
+                            <div class="sum-sub">${escHtml(plan.company)} · ${plan.planNo} · ${escHtml(getNamaUnit(plan))} / ${plan.id}</div>
+                            <div class="sum-chips mt-2 mb-0">
+                                <span class="sum-chip"><i class="bi bi-calendar-event"></i><small>Tanggal Order</small><b>${hd.orderDate || "-"}</b></span>
+                                <span class="sum-chip"><i class="bi bi-geo-alt"></i><small>Lokasi Pengambilan</small><b>${hd.pickupLocation || "-"}</b></span>
+                                <span class="sum-chip"><i class="bi bi-boxes"></i><small>Jenis Item</small><b>${shown.length}</b></span>
+                                <span class="sum-chip"><i class="bi bi-box-seam"></i><small>Total Qty</small><b>${fmt(total)} kg</b></span>
+                            </div>
+                        </div>
+                        ${skip ? `<span class="badge bg-secondary">Sudah ada forecast</span>` : `<span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>Akan Disimpan</span>`}
+                        <i class="bi bi-chevron-down sum-chev"></i>
+                    </div>
+                    <div class="sum-body">
+
+                    <div class="sum-cols">
+                        <div class="sum-col">
+                            <div class="sum-col-h"><i class="bi bi-file-earmark-text"></i>Dokumen Order</div>
+                            <table class="table table-sm align-middle mb-0 sum-table">
+                                <thead><tr><th style="width:28px;">#</th><th>Item Pakan</th><th class="text-end">Jumlah</th></tr></thead>
+                                <tbody>${itemRows}</tbody>
+                                <tfoot><tr><td colspan="2" class="text-end">Total Order</td><td class="text-end">${fmt(total)} kg</td></tr></tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="sum-est">
+                        <div class="sum-col-h"><i class="bi bi-calendar-check"></i>Estimasi Habis Kapan</div>
+                        <div class="wz-grid sum-est-grid">
+                            ${cell("Date", fmtDate(est.date), "#166534")}${cell("Age", est.age, "#166534")}${cell("Diff", est.diff, "#166534")}
+                            ${cell("Total Pakan Sisa", fmt(est.sisaPakan) + " kg")}${cell("FI Cum Sisa Pakan", fmt(est.fiCumSisa, 3))}
+                            ${cell("FI Cum Total", fmt(est.fiCumTotal, 3))}${cell("Usia FI Cum Total", est.usiaTotal)}
+                        </div>
+                    </div>
+                    </div>
+                </div>`;
+            }).join("");
+
+            document.getElementById("reviewModalBody").innerHTML = `
+                ${wizardStepper(2)}
+                <div class="p-3">
+                    <div class="sum-hero">
+                        <div class="sum-stat"><i class="bi bi-files"></i><div><div class="k">Forecast</div><div class="v">${willCreate}</div></div></div>
+                        <div class="sum-stat"><i class="bi bi-calendar-range"></i><div><div class="k">Periode</div><div class="v sm">${period}</div></div></div>
+                        <div class="sum-stat"><i class="bi bi-box-seam"></i><div><div class="k">Total Order</div><div class="v">${fmt(grandTotal)} <small>kg</small></div></div></div>
+                    </div>
+                    ${_reviewPlans.length > 1 ? `<div class="d-flex justify-content-end gap-2 mb-2">
+                        <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="setAllSumCards(true)"><i class="bi bi-arrows-expand me-1"></i>Expand Semua</button>
+                        <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="setAllSumCards(false)"><i class="bi bi-arrows-collapse me-1"></i>Collapse Semua</button></div>` : ""}
+                    ${cards}
+                </div>`;
+
+            document.getElementById("reviewModalFooter").innerHTML = `
+                <button class="btn btn-outline-secondary btn-sm fw-bold" onclick="reviewBackToLast()"><i class="bi bi-arrow-left me-1"></i>Edit Order</button>
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm fw-bold px-3" onclick="submitReviewForecast('Draft')" ${willCreate === 0 ? "disabled" : ""}>
+                        <i class="bi bi-floppy me-1"></i>Save as Draft</button>
+                    <button class="btn btn-primary btn-sm fw-bold px-4" onclick="submitReviewForecast('Forecast Created')" ${willCreate === 0 ? "disabled" : ""}>
+                        <i class="bi bi-send me-1"></i>Submit Forecast</button>
+                </div>`;
+        }
+
+        function reviewBackToLast() { _reviewStep = _reviewPlans.length - 1; _reviewPhase = "order"; renderReviewStep(); }
+
+        function submitReviewForecast(status) {
+            const period = getSelectedPeriod();
+            const history = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]");
+
+            // Submit wajib lengkap; Draft boleh belum lengkap
+            if (status !== "Draft") {
+                for (let i = 0; i < _reviewPlans.length; i++) {
+                    const planNo = _reviewPlans[i];
+                    const data = _reviewData[planNo];
+                    if (data.skipped || !canSubmitForecast(planNo, period, _editingFcNo).ok) continue;
+                    const errs = validateOrders(planNo);
+                    if (errs.length) {
+                        showToast(`Plan ${planNo}: ${errs[0]}${errs.length > 1 ? ` (+${errs.length - 1} lainnya)` : ""}.`, "error");
+                        _reviewStep = i; _reviewPhase = "order"; renderReviewStep();
+                        return;
+                    }
+                }
+            }
+
+            let count = 0;
+            _reviewPlans.forEach(planNo => {
+                const data = _reviewData[planNo];
+                if (data.skipped || !canSubmitForecast(planNo, period, _editingFcNo).ok) return;
+                const { plan, sap } = planSap(planNo);
+                const totalQty = orderTotalOf(planNo);
+                const est = calcEstimateAfterOrder(sap, totalQty);
+                const lines = activeOrders(planNo).map(r => ({
+                    itemCode: r.itemCode, itemName: r.itemName, flag: "Manual",
+                    standardNeed: r.qty, currentStock: 0, recommendedQty: r.qty,
+                    manualAdjustment: 0, uom: r.uom || "Kg"
+                }));
+                const existingIdx = _editingFcNo ? history.findIndex(h => h.fcNo === _editingFcNo && h.planNo === planNo) : -1;
+                const fcNo = existingIdx >= 0 ? history[existingIdx].fcNo : "FC-" + new Date().getFullYear() + "-" + String(history.length + count + 1).padStart(3, '0');
+                const record = {
+                    fcNo, fcDate: todayISO(), period, periodFrom: _periodRange.from, periodTo: _periodRange.to,
+                    // Header dokumen → header PO & SO di SAP Business One
+                    orderDate: data.header.orderDate, pickupLocation: data.header.pickupLocation,
+                    planNo: plan.planNo, planName: `${getNamaUnit(plan)} / ${plan.id}`,
+                    planDesc: getPlanDescription(plan), namaPlasma: getPlanDescription(plan),
+                    company: plan.company, farm: getNamaUnit(plan), warehouse: plan.wh, warehouseName: getWhName(plan), kdgId: plan.id,
+                    status, docType: plan.docType, age: String(plan.ageCurrent ?? plan.age), rawAge: plan.ageCurrent ?? plan.age,
+                    docCodeMale: "-", docCodeFemale: "-", docNameMale: "-", docNameFemale: "-",
+                    initialStock: plan.docQty, currentPop: plan.docQty, totalPop: plan.docQty,
+                    totalQty, lines,
+                    panenParsial: { date: data.panen.date || "", ekor: data.panen.ekor || 0 },
+                    estimasiHabis: {
+                        date: fmtDate(est.date), age: est.age, diff: est.diff, addDays: est.addDays,
+                        totalPakanSisa: est.sisaPakan, fiCumSisaPakan: est.fiCumSisa, fiCumTotal: est.fiCumTotal, usiaFiCumTotal: est.usiaTotal
+                    },
+                    _stored: true
+                };
+                if (existingIdx >= 0) history[existingIdx] = record; else history.push(record);
+                plan.fcStatus = status === "Draft" ? "Draft" : "Forecast Created";
+                count++;
+            });
+            localStorage.setItem("IBOCS_fc_list", JSON.stringify(history));
+            _reviewModalInst.hide();
+            showToast(`${count} Forecast (${period}) berhasil ${status === 'Draft' ? 'disimpan sebagai Draft' : 'disubmit'}. <a href="customer_ForecastList.html" style="color:#166534;font-weight:700;">Lihat List →</a>`, "success");
+            _selectedPlansForBulk = [];
+            _editingFcNo = null;
+            renderPlanCards();
+            updateBulkActionBar();
+        }
+
+        // ─── ITEM SEARCH (untuk baris order) ─────────────────────────────────────
+        let _itemSearchTargetPlanNo = null;
+        let _itemSearchTargetRowId = null;
+
+        function openItemSearchReview(planNo, rowId) {
+            _itemSearchTargetPlanNo = planNo;
+            _itemSearchTargetRowId = rowId;
+            document.getElementById("itemSearchQ").value = "";
+            filterItemSearch("");
+            const el = document.getElementById("itemSearchModal");
+            let m = bootstrap.Modal.getInstance(el);
+            if (!m) m = new bootstrap.Modal(el, { backdrop: false });
+            m.show();
+        }
+
+        function selectItem(code, name, uom) {
+            const planNo = _itemSearchTargetPlanNo;
+            const row = _reviewData[planNo]?.orders.find(r => r.id === _itemSearchTargetRowId);
+            if (row) { row.itemCode = code; row.itemName = name; row.uom = uom; ensureTrailingRow(planNo); } // baris berikutnya muncul otomatis
+            bootstrap.Modal.getInstance(document.getElementById("itemSearchModal")).hide();
+            if (row) document.getElementById("orderRows").innerHTML = renderOrderRows(planNo);
+            _itemSearchTargetPlanNo = null;
+            _itemSearchTargetRowId = null;
+        }
+
+        // ─── PLAN INFO MODAL ──────────────────────────────────────────────────────
+        function openPlanInfo(planNo) {
+            const plan = DEMO_PLANS.find(p => p.planNo === planNo);
+            if (!plan) return;
+            const age = plan.ageCurrent ?? plan.age;
+            const sisaHari = Math.max(0, HARVEST_DAY - age);
+            const mortAct = getMortActual(plan);
+            document.getElementById("planInfoBody").innerHTML = `
+                <div class="pi-section pt-3">
+                    <div class="pi-section-title">Identitas Plan</div>
+                    <div class="pi-grid">
+                        <div class="pi-item"><div class="pik">Plan No</div><div class="piv">${plan.planNo}</div></div>
+                        <div class="pi-item"><div class="pik">Nama Plasma</div><div class="piv">${getPlanDescription(plan)}</div></div>
+                        <div class="pi-item"><div class="pik">Company</div><div class="piv">${plan.company}</div></div>
+                        <div class="pi-item"><div class="pik">Kandang</div><div class="piv">${plan.id}</div></div>
+                        <div class="pi-item"><div class="pik">Warehouse</div><div class="piv">${escHtml(getWhName(plan))}</div></div>
+                    </div>
+                </div>
+                <div class="pi-section">
+                    <div class="pi-section-title">DOC & Populasi</div>
+                    <div class="pi-grid">
+                        <div class="pi-item"><div class="pik">Item DOC</div><div class="piv">${plan.docType}</div></div>
+                        <div class="pi-item"><div class="pik">DOC Awal</div><div class="piv num">${fmt(plan.docQty)} ekor</div></div>
+                        <div class="pi-item"><div class="pik">Umur Saat Ini</div><div class="piv num" style="color:#92400e;">${age}</div></div>
+                        <div class="pi-item"><div class="pik">Sisa Hari</div><div class="piv num" style="color:#dc2626;">${sisaHari}</div></div>
+                        <div class="pi-item"><div class="pik">Nama Unit</div><div class="piv">${escHtml(getNamaUnit(plan))}</div></div>
+                        <div class="pi-item"><div class="pik">Mortality Actual</div><div class="piv num" style="color:#dc2626;">${fmt(mortAct.pct, 2)}% <span style="font-weight:400;font-size:12px;">(${fmt(mortAct.ekor)} ekor)</span></div></div>
+                    </div>
+                </div>
+                <div style="height:8px;"></div>`;
+            new bootstrap.Modal(document.getElementById("planInfoModal")).show();
+        }
+
+        function filterItemSearch(q) {
+            const items = M.getItemsByCategory("Feed");
+            const filtered = q
+                ? items.filter(i => i.name.toLowerCase().includes(q.toLowerCase()) || i.code.toLowerCase().includes(q.toLowerCase()))
+                : items;
+            document.getElementById("itemSearchList").innerHTML = filtered.length
+                ? filtered.map(i => `
+                    <div style="padding:10px 16px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;"
+                        onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''"
+                        onclick="selectItem('${i.code}', '${i.name.replace(/'/g, "\\'")}', '${i.uom}')">
+                        <div>
+                            <div style="font-size:11px;font-weight:700;color:#6366f1;">${i.code}</div>
+                            <div style="font-size:13px;font-weight:600;">${i.name}</div>
+                            <div style="font-size:11px;color:#6b7280;">${i.uom} · Rp ${i.price?.toLocaleString("id-ID") ?? "-"}/kg</div>
+                        </div>
+                    </div>`).join("")
+                : `<div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px;">Item tidak ditemukan</div>`;
+        }
+
+        // ─── FILTER PLAN (Location / Kandang) ─────────────────────────────────────
+        // Plan langsung dimuat dari SAP berdasarkan company; user cukup memfilter.
+        let _filterCompany = "";
+        let _filterLocation = "";
+        let _filterKandang = "";
+
+        function loadPlansForCompany(company) {
+            DEMO_PLANS = _sapPlansPool.filter(p => !company || p.company === company);
+        }
+
+        function getVisiblePlans() {
+            return DEMO_PLANS.filter(p => {
+                if (_filterCompany && p.company !== _filterCompany) return false;
+                if (_filterLocation && (p.location ?? p.farm) !== _filterLocation) return false;
+                if (_filterKandang && p.id !== _filterKandang) return false;
+                return true;
+            });
+        }
+
+        function renderFilters() {
+            const companyLocked = !!_activeCompany && _activeCompany !== "ALL";
+            const companies = [...new Set(DEMO_PLANS.map(p => p.company))];
+            const base = DEMO_PLANS.filter(p => !_filterCompany || p.company === _filterCompany);
+            const locations = [...new Set(base.map(p => p.location ?? p.farm))].sort();
+            const kandangs = [...new Set(base.filter(p => !_filterLocation || (p.location ?? p.farm) === _filterLocation).map(p => p.id))].sort();
+            const opt = (v, cur) => `<option value="${escHtml(v)}" ${v === cur ? "selected" : ""}>${escHtml(v)}</option>`;
+            const lbl = `font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;`;
+            document.getElementById("filterContainer").innerHTML = `
+                <div class="filter-panel">
+                    ${companyLocked ? "" : `
+                    <div style="min-width:180px;">
+                        <label class="form-label mb-1" style="${lbl}">Company</label>
+                        <select class="form-select form-select-sm" onchange="onFilterChange('company', this.value)">
+                            <option value="">Semua Company</option>${companies.map(c => opt(c, _filterCompany)).join("")}
+                        </select>
+                    </div>`}
+                    <div style="min-width:180px;">
+                        <label class="form-label mb-1" style="${lbl}">Nama Unit</label>
+                        <select class="form-select form-select-sm" onchange="onFilterChange('location', this.value)">
+                            <option value="">Semua Nama Unit</option>${locations.map(l => opt(l, _filterLocation)).join("")}
+                        </select>
+                    </div>
+                    <div style="min-width:180px;">
+                        <label class="form-label mb-1" style="${lbl}">Kandang</label>
+                        <select class="form-select form-select-sm" onchange="onFilterChange('kandang', this.value)">
+                            <option value="">Semua Kandang</option>${kandangs.map(k => opt(k, _filterKandang)).join("")}
+                        </select>
+                    </div>
+                    <div class="ms-auto small text-muted align-self-end">${getVisiblePlans().length} plan ditampilkan</div>
+                </div>`;
+        }
+
+        function onFilterChange(key, value) {
+            if (key === "company") { _filterCompany = value; _filterLocation = ""; _filterKandang = ""; }
+            if (key === "location") { _filterLocation = value; _filterKandang = ""; }
+            if (key === "kandang") { _filterKandang = value; }
+            // Plan yang tersaring keluar dari tampilan tidak boleh ikut terpilih
+            const visible = new Set(getVisiblePlans().map(p => p.planNo));
+            _selectedPlansForBulk = _selectedPlansForBulk.filter(no => visible.has(no));
+            renderPlanCards();
+            updateBulkActionBar();
+        }
+
+        // ─── FORECAST GUARD ──────────────────────────────────────────────────────
+        // Forecast Period = range tanggal, default 1 minggu ke belakang s/d hari ini (mis. 23-Sep-26 s/d 30-Sep-26)
+        let _periodRange = { from: "", to: "" };
+        let _periodPicker = null;
+
+        function getSelectedPeriod() {
+            return document.getElementById("forecastPeriod")?.value || "";
+        }
+
+        function initPeriodPicker() {
+            const today = new Date();
+            const weekAgo = addDays(today, -7);
+            _periodPicker = flatpickr("#forecastPeriod", {
+                mode: "range", dateFormat: "d-M-y", allowInput: false,
+                defaultDate: [weekAgo, today],
+                locale: { rangeSeparator: " s/d ", firstDayOfWeek: 1 },
+                onReady: (sel, str, fp) => { syncPeriodRange(sel); },
+                onChange: (sel) => {
+                    if (sel.length === 1) return; // tunggu tanggal akhir
+                    syncPeriodRange(sel);
+                    renderPlanCards();
+                },
+                onClose: (sel, str, fp) => {
+                    if (sel.length === 1) fp.setDate([sel[0], sel[0]], true); // 1 hari saja = from sama dengan to
+                }
+            });
+        }
+
+        function syncPeriodRange(sel) {
+            _periodRange = {
+                from: sel[0] ? flatpickr.formatDate(sel[0], "Y-m-d") : "",
+                to: sel[sel.length - 1] ? flatpickr.formatDate(sel[sel.length - 1], "Y-m-d") : ""
+            };
+        }
+
+        function getLastFcForPlan(planNo) {
+            const history = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]");
+            const forPlan = history.filter(f => f.planNo === planNo);
+            if (!forPlan.length) return null;
+            return forPlan[forPlan.length - 1];
+        }
+
+        function canSubmitForecast(planNo, period, ignoreFcNo) {
+            const history = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]");
+            const samePeriod = history.find(f => f.planNo === planNo && (f.period || f.week) === period && f.fcNo !== ignoreFcNo);
+            if (!samePeriod) return { ok: true };
+            return { ok: false, reason: `Forecast ${samePeriod.fcNo} untuk ${planNo} ${period} sudah ada.` };
+        }
+
+        // ─── BULK FORECAST ACTION ─────────────────────────────────────────────────
+        let _selectedPlansForBulk = [];
+
+        function toggleBulk(planNo, checked) {
+            if (checked) {
+                if (!_selectedPlansForBulk.includes(planNo)) _selectedPlansForBulk.push(planNo);
+            } else {
+                _selectedPlansForBulk = _selectedPlansForBulk.filter(p => p !== planNo);
+            }
+            updateBulkActionBar();
+        }
+
+        function toggleAllBulk(cb, companyKey) {
+            const checked = cb.checked;
+            const rowCbs = document.querySelectorAll('.cb-bulk-' + companyKey.replace(/\s+/g, '-'));
+            rowCbs.forEach(input => {
+                input.checked = checked;
+                toggleBulk(input.value, checked);
+            });
+        }
+
+        function updateBulkActionBar() {
+            const bar = document.getElementById("bulkActionBar");
+            if (!bar) return;
+            const count = _selectedPlansForBulk.length;
+            if (count > 0) {
+                bar.style.display = "flex";
+                document.getElementById("bulkActionCount").textContent = count;
+            } else {
+                bar.style.display = "none";
+            }
+        }
+
+
+        // Edit draft dari Forecast List (?fcNo=...): buka wizard langsung di langkah Input Order
+        function resumeDraftFromUrl(fcNo) {
+            if (!fcNo) return;
+            const history = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]");
+            const fc = history.find(h => h.fcNo === fcNo && (h.status === "Draft" || h.status === "Forecast Created"));
+            const plan = fc && DEMO_PLANS.find(p => p.planNo === fc.planNo);
+            if (!plan) { showToast("Forecast tidak ditemukan atau sudah tidak bisa diedit.", "warning"); return; }
+            if (fc.periodFrom && fc.periodTo && _periodPicker) {
+                _periodPicker.setDate([fc.periodFrom, fc.periodTo], true);
+                syncPeriodRange(_periodPicker.selectedDates);
+                renderPlanCards();
+            }
+            _editingFcNo = fcNo;
+            plan.tanggalPanen = fc.panenParsial?.date || undefined;
+            plan.ekorPanen = fc.panenParsial?.ekor || undefined;
+            _reviewPlans = [plan.planNo];
+            _reviewData = {
+                [plan.planNo]: {
+                    skipped: false,
+                    panen: { date: fc.panenParsial?.date || "", ekor: fc.panenParsial?.ekor || 0 },
+                    header: newHeader({
+                        orderDate: fc.orderDate || todayISO(),
+                        pickupLocation: PICKUP_LOCATIONS.includes(fc.pickupLocation) ? fc.pickupLocation : PICKUP_LOCATIONS[0]
+                    }),
+                    orders: (fc.lines || []).map(l => newOrderRow({
+                        itemCode: l.itemCode || "", itemName: l.itemName || "",
+                        qty: parseFloat(l.recommendedQty) || 0, uom: l.uom || "Kg"
+                    }))
+                }
+            };
+            ensureTrailingRow(plan.planNo);
+            openWizard(0, "order");
+        }
+
+        // ─── TOAST NOTIF ─────────────────────────────────────────────────────────
+        function showToast(msg, type = "info") {
+            const colorMap = { success: "#166534", warning: "#92400e", error: "#991b1b", info: "#1e40af" };
+            const bgMap = { success: "#dcfce7", warning: "#fef3c7", error: "#fee2e2", info: "#dbeafe" };
+            const iconMap = { success: "bi-check-circle-fill", warning: "bi-exclamation-triangle-fill", error: "bi-x-circle-fill", info: "bi-info-circle-fill" };
+
+            const container = document.getElementById("toastContainer");
+            const id = "toast-" + Date.now();
+            const el = document.createElement("div");
+            el.id = id;
+            el.style.cssText = `background:${bgMap[type]};color:${colorMap[type]};border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.12);display:flex;align-items:flex-start;gap:10px;min-width:280px;max-width:380px;`;
+            el.innerHTML = `<i class="bi ${iconMap[type]}" style="margin-top:1px;flex-shrink:0;"></i><span style="flex:1;">${msg}</span><button onclick="document.getElementById('${id}').remove()" style="background:none;border:none;cursor:pointer;color:${colorMap[type]};font-size:16px;line-height:1;padding:0;margin-left:4px;">×</button>`;
+            container.appendChild(el);
+            setTimeout(() => { if (document.getElementById(id)) el.remove(); }, 5000);
+        }
+
+        // ─── INIT ─────────────────────────────────────────────────────────────────
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const company = params.get("company");
+            if (company) {
+                _activeCompany = company;
+                _filterCompany = company;
+                document.querySelector("h1").textContent = `Add Forecast — ${company}`;
+                document.querySelector(".subtext").textContent = `Plan aktif untuk ${company} langsung tampil. Filter Nama Unit / Kandang, centang plan, isi order, lalu simpan sebagai draft atau submit.`;
+            }
+            initPeriodPicker();
+            // Plan langsung dimuat (tanpa tarik manual dari SAP)
+            loadPlansForCompany(company);
+            new SidebarSystem(null, 'forecast').render();
+            renderPlanCards();
+            updateBulkActionBar();
+            resumeDraftFromUrl(params.get("fcNo"));
+        });
+    </script>
+</body>
+
+</html>

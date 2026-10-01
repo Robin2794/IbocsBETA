@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IBOCS | DO Draft DOC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #222;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 13px 16px;
+            font-weight: 700;
+            font-size: 13px;
+            border-bottom: 1px solid #eef0f4;
+            background: #fafbfe;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .summary-box {
+            border: 1px solid #e8ebf1;
+            border-radius: 10px;
+            padding: 14px 16px;
+            background: #fafbfe;
+        }
+
+        .summary-box .lbl {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-bottom: 5px;
+        }
+
+        .summary-box .val {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 14px;
+        }
+
+        .filter-row .f {
+            flex: 1 1 150px;
+        }
+
+        .filter-row .f-wide {
+            flex-basis: 240px;
+        }
+
+        .filter-row label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .filter-row select,
+        .filter-row input {
+            width: 100%;
+            height: 36px;
+            border: 1px solid #d5dae3;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 13px;
+            background: #fff;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .column-menu {
+            min-width: 230px;
+            padding: 8px;
+        }
+
+        .column-menu .dropdown-item {
+            border-radius: 6px;
+            padding: 7px 8px;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1180px;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #edf0f5;
+            font-size: 13px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f9fafc;
+            font-size: 12px;
+            color: #555;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .plan-main {
+            font-weight: 600;
+            color: #111827;
+            white-space: normal;
+        }
+
+        .plan-code {
+            margin-top: 2px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        tbody tr:hover {
+            background: #fafcff;
+            cursor: pointer;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .tag-draft {
+            background: #fef9c3;
+            color: #92400e;
+        }
+
+        .tag-open {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .tag-generated {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tag-dogrpo {
+            background: #ccfbf1;
+            color: #0f766e;
+        }
+
+        .tag-pogen {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .tag-internal {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .tag-external {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .btn-xs {
+            padding: 5px 10px;
+            border-radius: 7px;
+            border: 0;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-view {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .btn-edit {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .btn-del {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-cell { display:flex; justify-content:center; gap:6px; }
+        .action-btn {
+            width:30px;
+            min-width:30px;
+            height:28px;
+            border:1px solid #c7d2fe;
+            border-radius:7px;
+            background:#fff;
+            color:#4338ca;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            font-size:12px;
+            font-weight:700;
+            cursor:pointer;
+            position:relative;
+            text-decoration:none;
+            transition:background .18s ease;
+        }
+        .action-btn:hover { background:#eef2ff; color:#4338ca; }
+        .action-btn .action-text {
+            position:absolute;
+            right:50%;
+            bottom:calc(100% + 6px);
+            transform:translateX(50%);
+            background:#111827;
+            color:#fff;
+            border-radius:5px;
+            padding:4px 7px;
+            font-size:11px;
+            line-height:1;
+            opacity:0;
+            pointer-events:none;
+            white-space:nowrap;
+            box-shadow:0 4px 12px rgba(0,0,0,.16);
+            transition:opacity .14s ease;
+            z-index:20;
+        }
+        .action-btn:hover .action-text { opacity:1; }
+        .action-btn-edit { color:#92400e; border-color:#fde68a; }
+        .action-btn-edit:hover { background:#fffbeb; color:#92400e; }
+
+        .btn-primary-sm {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 0;
+            font-size: 13px;
+            font-weight: 700;
+            background: #1a237e;
+            color: #fff;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .qty-warn {
+            color: #d97706;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand fw-bold" href="forecast_dashboard.html">IBOCS</a>
+            <span class="navbar-text text-white-50 small d-none d-md-inline">Hatchery Portal</span>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                        id="userBtn">User</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text small text-muted" id="userInfo">-</span></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><button class="dropdown-item text-danger" id="btnLogout">Logout</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-3">
+        <div class="row g-3">
+            <div class="col-lg-2" id="sidebar-container"></div>
+            <div class="col-lg-10">
+
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-0">DO Draft DOC</h5>
+                        <div class="text-muted" style="font-size:13px;">Daftar semua DO Draft Day-Old Chick</div>
+                    </div>
+                    <a href="hatchery_doc_draft_add.html" class="btn-primary-sm" id="btnNew">
+                        <i class="bi bi-plus-lg me-1"></i> Buat DO Draft
+                    </a>
+                </div>
+
+                <!-- Summary -->
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-clipboard-data me-1"></i>Summary</div>
+                    <div class="card-body">
+                        <div class="summary-grid" id="summaryGrid" style="margin-bottom:0;"></div>
+                    </div>
+                </div>
+
+                <!-- Filter & Table -->
+                <div class="card">
+                    <div class="card-header">Daftar DO Draft</div>
+                    <div class="card-body">
+                        <div class="filter-row">
+                            <div class="f">
+                                <label>DOC Type</label>
+                                <select id="fType">
+                                    <option value="">Semua</option>
+                                    <option value="internal">Hatchery</option>
+                                    <option value="external">Trading</option>
+                                </select>
+                            </div>
+                            <div class="f">
+                                <label>Hatchery/Warehouse</label>
+                                <select id="fWarehouse">
+                                    <option value="">Semua</option>
+                                </select>
+                            </div>
+                            <div class="f">
+                                <label>Customer</label>
+                                <select id="fCustomer">
+                                    <option value="">Semua</option>
+                                </select>
+                            </div>
+                            <div class="f">
+                                <label>Status DO</label>
+                                <select id="fStatus">
+                                    <option value="">Semua</option>
+                                    <option value="Draft">Draft</option>
+                                    <option value="Open">Open</option>
+                                    <option value="DO Generated">DO Generated</option>
+                                    <option value="DO & GRPO Generated">DO &amp; GRPO Generated</option>
+                                </select>
+                            </div>
+                            <div class="f">
+                                <label>Status PO</label>
+                                <select id="fStatusPO">
+                                    <option value="">Semua</option>
+                                    <option value="PO Generated">PO Generated</option>
+                                    <option value="none">Belum PO</option>
+                                </select>
+                            </div>
+                            <div class="f">
+                                <label>Dari Tanggal</label>
+                                <input type="date" id="fDateFrom">
+                            </div>
+                            <div class="f">
+                                <label>Sampai</label>
+                                <input type="date" id="fDateTo">
+                            </div>
+                            <div class="f f-wide">
+                                <label>Search</label>
+                                <input type="search" id="fSearch"
+                                    placeholder="Cari DO Draft / customer / plan / dokumen">
+                            </div>
+                            <div>
+                                <label>&nbsp;</label>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn-xs btn-view" onclick="applyFilter()"
+                                        style="height:36px;padding:0 14px;">Filter</button>
+                                    <button class="btn-xs"
+                                        style="background:#f3f4f6;color:#374151;height:36px;padding:0 14px;"
+                                        onclick="resetFilter()">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-toolbar">
+                            <div class="dropdown">
+                                <button class="btn-xs btn-view dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="bi bi-layout-three-columns me-1"></i> Pilih Kolom
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end column-menu" id="columnMenu"></div>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead id="tableHead"></thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="emptyState" class="text-center text-muted py-4" style="display:none;font-size:13px;">
+                            <i class="bi bi-inbox"
+                                style="font-size:32px;opacity:.3;display:block;margin-bottom:8px;"></i>
+                            Tidak ada DO Draft ditemukan
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="master_data.js"></script>
+    <script src="doc_draft_storage.js"></script>
+    <script src="sidebar.js"></script>
+    <script>
+        const sidebar = new SidebarSystem(null, "doc_draft_list");
+        sidebar.render();
+
+        // User info
+        const userData = JSON.parse(localStorage.getItem("IBOCS_user") || "{}");
+        document.getElementById("userInfo").textContent = userData.name || userData.role || "-";
+        document.getElementById("userBtn").textContent = userData.name || "User";
+        document.getElementById("btnLogout").addEventListener("click", () => {
+            localStorage.removeItem("IBOCS_user");
+            location.href = "login.html";
+        });
+
+        // Hanya admin_hatchery yg bisa buat DO Draft baru
+        if (userData.role !== "admin_hatchery" && userData.role !== "super_admin") {
+            document.getElementById("btnNew").style.display = "none";
+        }
+
+        let allDrafts = [];
+        let currentDrafts = [];
+        const columnConfig = [
+            { key: "id", label: "No. DO Draft", visible: true },
+            { key: "deliveryDate", label: "Delivery Date", visible: true },
+            { key: "grpoDate", label: "GRPO Date", visible: false },
+            { key: "docType", label: "DOC Type", visible: true },
+            { key: "warehouse", label: "Hatchery/Warehouse", visible: true },
+            { key: "customer", label: "Customer", visible: true },
+            { key: "plan", label: "Plan Tujuan", visible: true },
+            { key: "statusDO", label: "Status DO", visible: true },
+            { key: "statusPO", label: "Status PO", visible: true },
+            { key: "doNumber", label: "No. DO", visible: false },
+            { key: "grpoNumber", label: "No. GRPO", visible: false },
+            { key: "poNumber", label: "No. PO", visible: false },
+            { key: "actions", label: "Aksi", visible: true, locked: true }
+        ];
+
+        function hasMismatch(draft) {
+            return draft.lines.some(line => {
+                const totalAfter = line.afterItems.reduce((s, a) => s + (a.qtyAfter || 0), 0);
+                return totalAfter !== (line.qtyBefore || 0);
+            });
+        }
+
+        function emptyText() {
+            return `<span style="color:#9ca3af;font-size:11px;">&mdash;</span>`;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, chr => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[chr]));
+        }
+
+        function getGrpoDate(d) {
+            return d.grpoDate || (d.grpoNumber ? (d.postingDate || d.date || "") : "");
+        }
+
+        function getWarehouseLabel(d) {
+            return d.whsePengirimName || d.whsePengirim || d.hatchery || "";
+        }
+
+        function getPlanLabel(d) {
+            const plan = d.planCode && window.M ? M.getPlan(d.planCode) : null;
+            const name = d.planName || (plan && plan.description) || "";
+            if (!d.planCode && !name) return "";
+            if (!d.planCode) return escapeHtml(name);
+            if (!name) return escapeHtml(d.planCode);
+            return `
+                <div class="plan-main">${escapeHtml(name)}</div>
+                <div class="plan-code">${escapeHtml(d.planCode)}</div>
+            `;
+        }
+
+        function getPlanSearchLabel(d) {
+            const plan = d.planCode && window.M ? M.getPlan(d.planCode) : null;
+            const name = d.planName || (plan && plan.description) || "";
+            return `${d.planCode || ""} ${name}`;
+        }
+
+        function renderSummary(drafts) {
+            const unconfirmed = drafts.filter(d => d.status === "Draft").length;
+            const notGeneratedDO = drafts.filter(d => !d.doNumber).length;
+            const notGeneratedPO = drafts.filter(d => !hasGeneratedPO(d)).length;
+
+            document.getElementById("summaryGrid").innerHTML = `
+                <div class="summary-box">
+                    <div class="lbl">Belum Dikonfirmasi</div>
+                    <div class="val" style="color:#92400e">${unconfirmed}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="lbl">Belum Generate DO</div>
+                    <div class="val" style="color:#3730a3">${notGeneratedDO}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="lbl">Belum Generate PO</div>
+                    <div class="val" style="color:#5b21b6">${notGeneratedPO}</div>
+                </div>`;
+        }
+
+        function statusDOTag(status) {
+            if (status === "Draft") return `<span class="tag tag-draft">Draft</span>`;
+            if (status === "Open") return `<span class="tag tag-open">Open</span>`;
+            if (status === "DO & GRPO Generated") return `<span class="tag tag-dogrpo">DO &amp; GRPO Generated</span>`;
+            return `<span class="tag tag-generated">DO Generated</span>`;
+        }
+
+        function renderStatusPOTag(statusPO) {
+            return statusPO === "PO Generated"
+                ? `<span class="tag tag-pogen">PO Generated</span>`
+                : emptyText();
+        }
+
+        function hasGeneratedPO(d) {
+            return d.statusPO === "PO Generated" && !!d.doNumber && d.status !== "Draft";
+        }
+
+        function docTypeTag(docType) {
+            return docType === "internal"
+                ? `<span class="tag tag-internal">Hatchery</span>`
+                : `<span class="tag tag-external">Trading</span>`;
+        }
+
+        function renderColumnMenu() {
+            document.getElementById("columnMenu").innerHTML = columnConfig.map(col => `
+                <label class="dropdown-item" onclick="event.stopPropagation()">
+                    <input class="form-check-input me-2 column-toggle" type="checkbox" value="${col.key}" ${col.visible ? "checked" : ""} ${col.locked ? "disabled" : ""}>
+                    ${col.label}
+                </label>
+            `).join("");
+
+            document.querySelectorAll(".column-toggle").forEach(input => {
+                input.addEventListener("change", e => {
+                    const column = columnConfig.find(col => col.key === e.target.value);
+                    if (!column || column.locked) return;
+                    column.visible = e.target.checked;
+                    renderTable(currentDrafts);
+                });
+            });
+        }
+
+        function renderTable(drafts) {
+            currentDrafts = drafts;
+            const tbody = document.getElementById("tableBody");
+            const thead = document.getElementById("tableHead");
+            const empty = document.getElementById("emptyState");
+            const visibleColumns = columnConfig.filter(col => col.visible);
+
+            thead.innerHTML = `<tr>${visibleColumns.map(col => `<th>${col.label}</th>`).join("")}</tr>`;
+
+            if (!drafts.length) {
+                tbody.innerHTML = "";
+                empty.style.display = "block";
+                return;
+            }
+            empty.style.display = "none";
+
+            const role = userData.role;
+            tbody.innerHTML = drafts.map(d => {
+                const typeTag = d.docType === "internal"
+                    ? `<span class="tag tag-internal">Hatchery</span>`
+                    : `<span class="tag tag-external">Trading</span>`;
+                const statusTag = d.status === "Draft"
+                    ? `<span class="tag tag-draft">Draft</span>`
+                    : d.status === "Open"
+                        ? `<span class="tag tag-open">Open</span>`
+                        : d.status === "DO & GRPO Generated"
+                            ? `<span class="tag tag-dogrpo">DO &amp; GRPO Generated</span>`
+                            : `<span class="tag tag-generated">DO Generated</span>`;
+
+                const statusPOTag = d.statusPO === "PO Generated"
+                    ? `<span class="tag tag-pogen">PO Generated</span>`
+                    : `<span style="color:#9ca3af;font-size:11px;">—</span>`;
+
+                const planLabel = d.planCode
+                    ? `${d.planCode}<span style="font-size:11px;color:#6b7280"> — ${d.planName || ""}</span>`
+                    : `<span style="color:#9ca3af;font-size:11px;">—</span>`;
+
+                const canEdit = d.status === "Draft" &&
+                    (role === "admin_hatchery" || role === "super_admin");
+
+                const actions = `
+                    <a href="hatchery_doc_draft_view.html?id=${encodeURIComponent(d.id)}" class="action-btn" title="View"><i class="bi bi-eye"></i><span class="action-text">View</span></a>
+                    ${canEdit ? `<a href="hatchery_doc_draft_add.html?id=${encodeURIComponent(d.id)}" class="action-btn action-btn-edit" title="Edit"><i class="bi bi-pencil"></i><span class="action-text">Edit</span></a>` : ""}`;
+
+                const cellMap = {
+                    id: `<strong>${escapeHtml(d.id)}</strong>`,
+                    deliveryDate: escapeHtml(d.deliveryDate || d.date || "-"),
+                    grpoDate: getGrpoDate(d) ? escapeHtml(getGrpoDate(d)) : emptyText(),
+                    docType: docTypeTag(d.docType),
+                    warehouse: getWarehouseLabel(d) ? escapeHtml(getWarehouseLabel(d)) : emptyText(),
+                    customer: escapeHtml(d.customerName || d.customer || "-"),
+                    plan: getPlanLabel(d) || emptyText(),
+                    statusDO: statusDOTag(d.status),
+                    statusPO: renderStatusPOTag(hasGeneratedPO(d) ? d.statusPO : null),
+                    doNumber: d.doNumber ? escapeHtml(d.doNumber) : emptyText(),
+                    grpoNumber: d.grpoNumber ? escapeHtml(d.grpoNumber) : emptyText(),
+                    poNumber: d.poGenId ? escapeHtml(d.poGenId) : emptyText(),
+                    actions: `<div class="action-cell">${actions}</div>`
+                };
+
+                return `<tr onclick="location.href='hatchery_doc_draft_view.html?id=${encodeURIComponent(d.id)}'">
+                    ${visibleColumns.map(col => {
+                    const stopClick = col.key === "actions" ? ` onclick="event.stopPropagation()"` : "";
+                    return `<td${stopClick}>${cellMap[col.key]}</td>`;
+                }).join("")}
+                </tr>`;
+            }).join("");
+        }
+
+        function applyFilter() {
+            const type = document.getElementById("fType").value;
+            const warehouse = document.getElementById("fWarehouse").value;
+            const cust = document.getElementById("fCustomer").value;
+            const status = document.getElementById("fStatus").value;
+            const statusPO = document.getElementById("fStatusPO").value;
+            const dateFrom = document.getElementById("fDateFrom").value;
+            const dateTo = document.getElementById("fDateTo").value;
+            const search = document.getElementById("fSearch").value.trim().toLowerCase();
+
+            let filtered = allDrafts.filter(d => {
+                const deliveryDate = d.deliveryDate || d.date || "";
+                const haystack = [
+                    d.id, d.deliveryDate, getGrpoDate(d), d.docType, getWarehouseLabel(d),
+                    d.customerName, d.customer, getPlanSearchLabel(d), d.status, hasGeneratedPO(d) ? d.statusPO : "",
+                    d.doNumber, d.grpoNumber, d.poGenId
+                ].join(" ").toLowerCase();
+
+                if (type && d.docType !== type) return false;
+                if (warehouse && d.whsePengirim !== warehouse) return false;
+                if (cust && d.customer !== cust) return false;
+                if (status && d.status !== status) return false;
+                if (statusPO === "PO Generated" && !hasGeneratedPO(d)) return false;
+                if (statusPO === "none" && hasGeneratedPO(d)) return false;
+                if (dateFrom && deliveryDate < dateFrom) return false;
+                if (dateTo && deliveryDate > dateTo) return false;
+                if (search && !haystack.includes(search)) return false;
+                return true;
+            });
+            renderSummary(filtered);
+            renderTable(filtered);
+        }
+
+        function resetFilter() {
+            ["fType", "fWarehouse", "fCustomer", "fStatus", "fStatusPO", "fDateFrom", "fDateTo", "fSearch"].forEach(id => {
+                const el = document.getElementById(id);
+                el.value = "";
+            });
+            renderSummary(allDrafts);
+            renderTable(allDrafts);
+        }
+
+        function init() {
+            allDrafts = docDraftLoadAll();
+
+            // Populate filters from loaded draft data.
+            const whSel = document.getElementById("fWarehouse");
+            const custSel = document.getElementById("fCustomer");
+            const whMap = {};
+            const custMap = {};
+            allDrafts.forEach(d => { if (d.whsePengirim) whMap[d.whsePengirim] = getWarehouseLabel(d); });
+            allDrafts.forEach(d => { if (d.customer) custMap[d.customer] = d.customerName || d.customer; });
+            Object.entries(whMap).forEach(([code, name]) => {
+                whSel.innerHTML += `<option value="${escapeHtml(code)}">${escapeHtml(name)}</option>`;
+            });
+            Object.entries(custMap).forEach(([code, name]) => {
+                custSel.innerHTML += `<option value="${escapeHtml(code)}">${escapeHtml(name)}</option>`;
+            });
+
+            document.querySelectorAll("#fType,#fWarehouse,#fCustomer,#fStatus,#fStatusPO,#fDateFrom,#fDateTo").forEach(el => {
+                el.addEventListener("change", applyFilter);
+            });
+            document.getElementById("fSearch").addEventListener("input", applyFilter);
+
+            renderColumnMenu();
+            renderSummary(allDrafts);
+            renderTable(allDrafts);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

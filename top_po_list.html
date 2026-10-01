@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IBOCS | Daftar Purchase Order</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #222;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e8ebf1;
+        }
+
+        .card-header {
+            padding: 13px 16px;
+            font-weight: 800;
+            font-size: 13px;
+            border-bottom: 1px solid #eef0f4;
+            background: #fafbfe;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .summary-box {
+            border: 1px solid #e8ebf1;
+            border-radius: 8px;
+            padding: 14px 16px;
+            background: #fff;
+        }
+
+        .summary-box .lbl {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+
+        .summary-box .val {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) minmax(145px, .8fr) minmax(145px, .8fr) minmax(145px, .8fr) minmax(220px, 1.4fr) auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
+
+        .filter-row label {
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .filter-row select,
+        .filter-row input {
+            width: 100%;
+            height: 36px;
+            border: 1px solid #d5dae3;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 13px;
+            background: #fff;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .column-menu {
+            min-width: 220px;
+            padding: 8px;
+            z-index: 1080;
+        }
+
+        .column-menu .dropdown-item {
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            padding: 7px 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 860px;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #edf0f5;
+            font-size: 13px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f9fafc;
+            font-size: 12px;
+            color: #555;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #fafcff;
+            cursor: pointer;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .tag-open {
+            background: #fef9c3;
+            color: #92400e;
+        }
+
+        .tag-closed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .btn-xs {
+            padding: 5px 10px;
+            border-radius: 7px;
+            border: 0;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-view {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .btn-neutral {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .muted-empty {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .filter-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+
+            .summary-grid,
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid px-3">
+            <a class="navbar-brand fw-bold" href="forecast_dashboard.html">IBOCS</a>
+            <span class="navbar-text text-white-50 small d-none d-md-inline">TOP Portal</span>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                        id="userBtn">User</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text small text-muted" id="userInfo">-</span></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><button class="dropdown-item text-danger" id="btnLogout">Logout</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-3">
+        <div class="row g-3">
+            <div class="col-lg-2" id="sidebar-container"></div>
+            <div class="col-lg-10">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-0">Daftar Purchase Order</h5>
+                        <div class="text-muted" style="font-size:13px;">PO DOC yang telah di-generate dari DO Draft DOC
+                        </div>
+                    </div>
+                    <a href="top_po_generation_list.html" class="btn btn-success btn-sm fw-bold">
+                        <i class="bi bi-file-earmark-plus me-1"></i> PO Generation
+                    </a>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-clipboard-data me-1"></i>Summary</div>
+                    <div class="card-body">
+                        <div class="summary-grid mb-0" id="summaryGrid"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Daftar PO</div>
+                    <div class="card-body">
+                        <div class="filter-row">
+                            <div>
+                                <label>Customer</label>
+                                <select id="fCustomer">
+                                    <option value="">Semua</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Status</label>
+                                <select id="fStatus">
+                                    <option value="">Semua</option>
+                                    <option value="Open">Open</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Dari Tanggal</label>
+                                <input type="date" id="fDateFrom">
+                            </div>
+                            <div>
+                                <label>Sampai</label>
+                                <input type="date" id="fDateTo">
+                            </div>
+                            <div>
+                                <label>Search Box</label>
+                                <input type="search" id="fSearch" placeholder="Cari PO / DO Draft / GRPO / AP">
+                            </div>
+                            <div>
+                                <label>&nbsp;</label>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn-xs btn-view" onclick="applyFilter()"
+                                        style="height:36px;padding:0 14px;"><i class="bi bi-search"></i>Filter</button>
+                                    <button class="btn-xs btn-neutral" onclick="resetFilter()"
+                                        style="height:36px;padding:0 14px;"><i
+                                            class="bi bi-arrow-counterclockwise"></i>Reset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-toolbar">
+                            <div class="dropdown">
+                                <button class="btn-xs btn-view dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="bi bi-layout-three-columns"></i>Pilih Kolom
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end column-menu" id="columnMenu"></div>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead id="tableHead"></thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="emptyState" class="text-center text-muted py-4" style="display:none;font-size:13px;">
+                            <i class="bi bi-inbox"
+                                style="font-size:32px;opacity:.3;display:block;margin-bottom:8px;"></i>
+                            Belum ada PO yang dibuat. <a href="top_po_generation_list.html"
+                                style="color:#1d4ed8;">Generate PO sekarang &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="master_data.js"></script>
+    <script src="po_generation_storage.js"></script>
+    <script src="sidebar.js"></script>
+    <script>
+        const sidebar = new SidebarSystem(null, "po_list");
+        sidebar.render();
+
+        const userData = JSON.parse(localStorage.getItem("IBOCS_user") || "{}");
+        document.getElementById("userInfo").textContent = userData.name || userData.role || "-";
+        document.getElementById("userBtn").textContent = userData.name || "User";
+        document.getElementById("btnLogout").addEventListener("click", () => {
+            localStorage.removeItem("IBOCS_user");
+            location.href = "login.html";
+        });
+
+        let allPOs = [];
+        let currentPOs = [];
+        const columnConfig = [
+            { key: "id", label: "No. PO", visible: true },
+            { key: "date", label: "Tgl PO", visible: true },
+            { key: "doDraftId", label: "DO Draft Ref", visible: true },
+            { key: "vendor", label: "Vendor", visible: true },
+            { key: "customer", label: "Customer", visible: true },
+            { key: "status", label: "Status", visible: true },
+            { key: "grpoNo", label: "No. GRPO", visible: false },
+            { key: "grpoDate", label: "Tgl GRPO", visible: false },
+            { key: "apNo", label: "No. AP", visible: false },
+            { key: "apDate", label: "Tgl AP", visible: false },
+            { key: "actions", label: "Aksi", visible: true, locked: true }
+        ];
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, c => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+            }[c]));
+        }
+
+        function emptyText() {
+            return `<span class="muted-empty">-</span>`;
+        }
+
+        function normalizeStatus(status) {
+            return status === "Closed" ? "Closed" : "Open";
+        }
+
+        function statusTag(status) {
+            const s = normalizeStatus(status);
+            return s === "Closed"
+                ? `<span class="tag tag-closed">Closed</span>`
+                : `<span class="tag tag-open">Open</span>`;
+        }
+
+        function renderSummary(list) {
+            const total = list.length;
+            const open = list.filter(p => normalizeStatus(p.status) === "Open").length;
+            const closed = list.filter(p => normalizeStatus(p.status) === "Closed").length;
+            document.getElementById("summaryGrid").innerHTML = `
+                <div class="summary-box">
+                    <div class="lbl">Total PO</div>
+                    <div class="val">${total}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="lbl">Open</div>
+                    <div class="val" style="color:#92400e">${open}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="lbl">Closed</div>
+                    <div class="val" style="color:#166534">${closed}</div>
+                </div>`;
+        }
+
+        function renderColumnMenu() {
+            document.getElementById("columnMenu").innerHTML = columnConfig.map(col => `
+                <label class="dropdown-item" onclick="event.stopPropagation()">
+                    <input class="form-check-input me-2 column-toggle" type="checkbox" value="${col.key}" ${col.visible ? "checked" : ""} ${col.locked ? "disabled" : ""}>
+                    ${col.label}
+                </label>
+            `).join("");
+
+            document.querySelectorAll(".column-toggle").forEach(input => {
+                input.addEventListener("change", e => {
+                    const column = columnConfig.find(col => col.key === e.target.value);
+                    if (!column || column.locked) return;
+                    column.visible = e.target.checked;
+                    renderTable(currentPOs);
+                });
+            });
+        }
+
+        function renderTable(list) {
+            currentPOs = list;
+            const tbody = document.getElementById("tableBody");
+            const thead = document.getElementById("tableHead");
+            const empty = document.getElementById("emptyState");
+            const visibleColumns = columnConfig.filter(col => col.visible);
+
+            thead.innerHTML = `<tr>${visibleColumns.map(col => `<th>${col.label}</th>`).join("")}</tr>`;
+
+            if (!list.length) {
+                tbody.innerHTML = "";
+                empty.style.display = "block";
+                return;
+            }
+            empty.style.display = "none";
+
+            tbody.innerHTML = list.map(p => {
+                const cellMap = {
+                    id: `<strong>${escapeHtml(p.id)}</strong>`,
+                    date: escapeHtml(p.date || "-"),
+                    doDraftId: p.doDraftId
+                        ? `<a href="top_po_generation_view.html?id=${encodeURIComponent(p.doDraftId)}" onclick="event.stopPropagation()" style="color:#1d4ed8;font-weight:700;">${escapeHtml(p.doDraftId)}</a>`
+                        : emptyText(),
+                    vendor: escapeHtml(p.vendorName || p.vendorCode || "-"),
+                    customer: escapeHtml(p.customerName || p.customerCode || "-"),
+                    status: statusTag(p.status),
+                    grpoNo: p.grpoNo ? escapeHtml(p.grpoNo) : emptyText(),
+                    grpoDate: p.grpoDate ? escapeHtml(p.grpoDate) : emptyText(),
+                    apNo: p.apNo ? escapeHtml(p.apNo) : emptyText(),
+                    apDate: p.apDate ? escapeHtml(p.apDate) : emptyText(),
+                    actions: `<a href="top_po_view.html?id=${encodeURIComponent(p.id)}" class="btn-xs btn-view"><i class="bi bi-eye"></i>View</a>`
+                };
+
+                return `<tr onclick="location.href='top_po_view.html?id=${encodeURIComponent(p.id)}'">
+                    ${visibleColumns.map(col => {
+                    const stopClick = col.key === "actions" ? ` onclick="event.stopPropagation()"` : "";
+                    return `<td${stopClick}>${cellMap[col.key]}</td>`;
+                }).join("")}
+                </tr>`;
+            }).join("");
+        }
+
+        function populateCustomerFilter(list) {
+            const sel = document.getElementById("fCustomer");
+            sel.innerHTML = '<option value="">Semua</option>';
+            const seen = new Set();
+            list.forEach(p => {
+                if (!p.customerCode || seen.has(p.customerCode)) return;
+                seen.add(p.customerCode);
+                const opt = document.createElement("option");
+                opt.value = p.customerCode;
+                opt.textContent = p.customerName || p.customerCode;
+                sel.appendChild(opt);
+            });
+        }
+
+        function getFilteredPOs() {
+            const cust = document.getElementById("fCustomer").value;
+            const status = document.getElementById("fStatus").value;
+            const dateFrom = document.getElementById("fDateFrom").value;
+            const dateTo = document.getElementById("fDateTo").value;
+            const search = document.getElementById("fSearch").value.trim().toLowerCase();
+
+            return allPOs.filter(p => {
+                const poDate = p.date || "";
+                const haystack = [
+                    p.id, p.date, p.doDraftId, p.vendorCode, p.vendorName,
+                    p.customerCode, p.customerName, p.status, p.grpoNo, p.grpoDate,
+                    p.apNo, p.apDate
+                ].join(" ").toLowerCase();
+
+                if (cust && p.customerCode !== cust) return false;
+                if (status && normalizeStatus(p.status) !== status) return false;
+                if (dateFrom && poDate < dateFrom) return false;
+                if (dateTo && poDate > dateTo) return false;
+                if (search && !haystack.includes(search)) return false;
+                return true;
+            });
+        }
+
+        function applyFilter() {
+            const filtered = getFilteredPOs();
+            renderSummary(filtered);
+            renderTable(filtered);
+        }
+
+        function resetFilter() {
+            ["fCustomer", "fStatus", "fDateFrom", "fDateTo", "fSearch"].forEach(id => {
+                document.getElementById(id).value = "";
+            });
+            renderSummary(allPOs);
+            renderTable(allPOs);
+        }
+
+        function init() {
+            allPOs = poGenLoadAll().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+            populateCustomerFilter(allPOs);
+            renderColumnMenu();
+            renderSummary(allPOs);
+            renderTable(allPOs);
+
+            document.querySelectorAll("#fCustomer,#fStatus,#fDateFrom,#fDateTo").forEach(el => {
+                el.addEventListener("change", applyFilter);
+            });
+            document.getElementById("fSearch").addEventListener("input", applyFilter);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
