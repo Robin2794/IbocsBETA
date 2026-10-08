@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vendor | Incoming PO</title>
+    <title>Vendor | SO Generation Feed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -79,7 +80,7 @@
 
         .filter-grid {
             display: grid;
-            grid-template-columns: minmax(220px, 2fr) minmax(160px, 1fr) minmax(145px, 1fr) minmax(145px, 1fr) auto;
+            grid-template-columns: minmax(200px, 1.6fr) minmax(170px, 1fr) minmax(150px, .9fr) minmax(130px, .7fr) minmax(230px, 1.1fr) auto;
             gap: 14px;
             align-items: end;
             margin-bottom: 16px;
@@ -638,6 +639,21 @@
             margin-bottom: 12px;
         }
 
+        /* Sales Order Detail: tab, price input, total ala SAP */
+        .so-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .so-tab { border: 0; background: #f1f5f9; color: #64748b; font-weight: 700; font-size: 13px; padding: 5px 16px; border-radius: 20px; cursor: pointer; }
+        .so-tab.active { background: #dcfce7; color: #15803d; }
+        .so-pane { display: none; }
+        .so-pane.active { display: block; }
+        .so-pane-empty { padding: 36px 16px; text-align: center; color: #94a3b8; border: 1px dashed #cbd5e1; border-radius: 12px; margin-bottom: 20px; font-size: 13px; }
+        .price-input { width: 120px; height: 32px; border: 1px solid var(--line); border-radius: 6px; padding: 0 8px; font-size: 13px; font-weight: 600; text-align: right; outline: none; }
+        .price-input:focus, .tot-input:focus { border-color: #15803d; box-shadow: 0 0 0 3px rgba(21,128,61,.12); }
+        .tot-input { width: 130px; height: 30px; border: 1px solid var(--line); border-radius: 6px; padding: 0 8px; font-size: 13px; font-weight: 700; text-align: right; outline: none; }
+        .pi-input { width: 100%; font-weight: 600; color: #15803d; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; outline: none; }
+        .pi-input:disabled, .price-input:disabled, .tot-input:disabled { background: #f8fafc; color: #64748b; cursor: not-allowed; }
+        .btn-recalc { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 999px; padding: 8px 18px; font-weight: 700; font-size: 13px; cursor: pointer; }
+        .btn-recalc:hover { background: #dbeafe; }
+
         /* Qty input */
         .qty-input {
             width: 76px;
@@ -852,7 +868,7 @@
             <div class="col-lg-10">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="mb-0 text-success fw-bold">
-                        <i class="bi bi-inbox-fill me-2"></i>Incoming Purchase Orders
+                        <i class="bi bi-inbox-fill me-2"></i>SO Generation Feed
                     </h4>
                 </div>
 
@@ -860,7 +876,7 @@
 
                     <div class="topbar">
                         <div>
-                            <h1>SO Generation</h1>
+                            <h1>SO Generation Feed</h1>
                             <div class="subtext">Review incoming PO dari customer untuk generate Sales Order.</div>
                         </div>
                         <a href="vendor_salesorderlist.html" class="btn btn-outline-success btn-sm fw-bold">
@@ -894,12 +910,18 @@
                     </div>
 
                     <div class="card">
-                        <div class="card-header"><i class="bi bi-table me-1"></i>Incoming PO Documents</div>
+                        <div class="card-header"><i class="bi bi-table me-1"></i>Daftar PO Customer</div>
                         <div class="card-body">
                             <div class="filter-grid">
                                 <div class="field">
                                     <label>Search Box</label>
                                     <input id="fPoRef" type="text" placeholder="Search by PO Reference / Customer">
+                                </div>
+                                <div class="field">
+                                    <label>Nama PT Customer</label>
+                                    <select id="fCustomer">
+                                        <option value="">Semua Customer</option>
+                                    </select>
                                 </div>
                                 <div class="field">
                                     <label>Status</label>
@@ -909,12 +931,15 @@
                                     </select>
                                 </div>
                                 <div class="field">
-                                    <label>Dari Tanggal</label>
-                                    <input id="fDateFrom" type="date">
+                                    <label>Berdasarkan</label>
+                                    <select id="fDateBasis">
+                                        <option value="poDate">Posting Date</option>
+                                        <option value="deliveryDate">Delivery Date</option>
+                                    </select>
                                 </div>
                                 <div class="field">
-                                    <label>Sampai</label>
-                                    <input id="fDateTo" type="date">
+                                    <label>Range Tanggal</label>
+                                    <input id="fDateRange" type="text" readonly placeholder="Pilih range tanggal" style="background:#fff;">
                                 </div>
                                 <div class="field">
                                     <label>&nbsp;</label>
@@ -965,7 +990,7 @@
 
             <!-- Green Gradient Header -->
             <div class="modal-header">
-                <h5><i class="bi bi-file-earmark-text me-2"></i>Purchase Order Detail</h5>
+                <h5><i class="bi bi-file-earmark-text me-2"></i>Sales Order Detail</h5>
                 <button class="modal-close" onclick="closeReviewModal()">&times;</button>
             </div>
 
@@ -1018,6 +1043,14 @@
                                     <option value="WH-EAST">WH-EAST (East)</option>
                                 </select>
                             </div>
+                            <div class="col-6">
+                                <span class="pi-label">Tanggal Sales Order</span>
+                                <input type="date" id="mSoDate" class="pi-input">
+                            </div>
+                            <div class="col-6">
+                                <span class="pi-label">Dist Rule</span>
+                                <input type="text" id="mDistRule" class="pi-input" placeholder="Distribution Rule">
+                            </div>
                             <div class="col-12">
                                 <span class="pi-label">Customer Notes</span>
                                 <span class="pi-value" id="mPoNotes" style="font-weight:400;color:#64748b;font-style:italic;">-</span>
@@ -1026,8 +1059,15 @@
                     </div>
                 </div>
 
-                <!-- Contents Tag -->
-                <div class="modal-contents-tag"><i class="bi bi-list-ul me-1"></i>Contents</div>
+                <!-- Tabs -->
+                <div class="so-tabs">
+                    <button type="button" class="so-tab active" data-pane="paneContents" onclick="switchSoTab(this)"><i class="bi bi-list-ul me-1"></i>Contents</button>
+                    <button type="button" class="so-tab" data-pane="paneLogistic" onclick="switchSoTab(this)"><i class="bi bi-box-seam me-1"></i>Logistic</button>
+                    <button type="button" class="so-tab" data-pane="paneTransport" onclick="switchSoTab(this)"><i class="bi bi-truck me-1"></i>Transport</button>
+                </div>
+                <div class="so-pane" id="paneLogistic"><div class="so-pane-empty"><i class="bi bi-box-seam d-block fs-3 mb-2"></i>Field Logistic menyusul.</div></div>
+                <div class="so-pane" id="paneTransport"><div class="so-pane-empty"><i class="bi bi-truck d-block fs-3 mb-2"></i>Field Transport menyusul.</div></div>
+                <div class="so-pane active" id="paneContents">
 
                 <!-- Over-qty warning -->
                 <div class="warn-banner" id="mWarnBanner">
@@ -1055,6 +1095,8 @@
                     </div>
                 </div>
 
+                </div><!-- /paneContents -->
+
                 <!-- Bottom: Notes + Summary side by side -->
                 <div class="row g-4 align-items-end">
                     <div class="col-md-6">
@@ -1065,15 +1107,27 @@
                     <div class="col-md-6">
                         <div class="modal-summary-box">
                             <div class="modal-summary-row">
-                                <span class="text-muted">Total Before Tax</span>
+                                <span class="text-muted">Total Before Discount</span>
                                 <span class="fw-bold" id="mSubTotal">Rp 0</span>
                             </div>
                             <div class="modal-summary-row">
-                                <span class="text-muted">PPN (11%)</span>
+                                <span class="text-muted">Discount</span>
+                                <input type="number" min="0" class="tot-input" id="mDiscount" value="0" oninput="recalcModalGrandTotal()">
+                            </div>
+                            <div class="modal-summary-row">
+                                <span class="text-muted">Freight</span>
+                                <input type="number" min="0" class="tot-input" id="mFreight" value="0" oninput="recalcModalGrandTotal()">
+                            </div>
+                            <div class="modal-summary-row">
+                                <span class="text-muted">Rounding</span>
+                                <input type="number" class="tot-input" id="mRounding" value="0" oninput="recalcModalGrandTotal()">
+                            </div>
+                            <div class="modal-summary-row">
+                                <span class="text-muted">Tax (PPN 11%)</span>
                                 <span class="fw-bold" id="mTaxTotal">Rp 0</span>
                             </div>
                             <div class="modal-summary-row total-row">
-                                <span class="fw-bold text-dark">Total Amount Due</span>
+                                <span class="fw-bold text-dark">Total Payment Due</span>
                                 <span id="mGrandTotal" style="color:#15803d;">Rp 0</span>
                             </div>
                         </div>
@@ -1088,10 +1142,9 @@
                     <i class="bi bi-arrow-left me-1"></i>Cancel
                 </button>
                 <div class="ms-auto d-flex gap-2">
-                    <button class="btn-reject rounded-pill btn-reject px-4" onclick="rejectPO()" style="border-radius:999px!important;">
-                        <i class="bi bi-x-circle me-1"></i>Reject PO
-                    </button>
-                    <button class="btn-confirm" onclick="openConfirmModal()">
+                    <button type="button" class="btn-recalc" id="btnRecalc" onclick="recalcAll()">
+                        <i class="bi bi-calculator me-1"></i>Recalculate
+                    </button><button class="btn-confirm" onclick="openConfirmModal()">
                         <i class="bi bi-check-circle me-1"></i>Confirm &amp; Generate SO
                     </button>
                 </div>
@@ -1127,6 +1180,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="sidebar.js"></script>
     <script src="master_data.js"></script>
     <script>
@@ -1159,6 +1213,7 @@
                 document.querySelector("h4.text-success")?.append(badge);
             }
 
+            setupListFilters();
             renderTable();
         });
 
@@ -1251,7 +1306,7 @@
                     list.push({
                         poRef:        ord.no,
                         poDate:       ord.date || ord.createdAt?.slice(0, 10) || "",
-                        deliveryDate: ord.deliveryDate || "",
+                        deliveryDate: ord.deliveryDate || ord.requiredDate || "",
                         customer:     ord.customerName || ord.customer || "",
                         contact:      ord.contact || "",
                         address:      ord.address  || "",
@@ -1259,6 +1314,10 @@
                         vendorName:   vendorName,
                         status:       override.status || "Open",
                         whse:         override.whse   || ord.warehouse || "",
+                        whseName:     ord.warehouseName || "",
+                        pickupLocation: ord.pickupLocation || "",
+                        planDesc:     ord.planDesc || ord.planName || "",
+                        distRule:     ord.distRule || "",
                         items:        items.map(it => ({
                             sku:     it.sku,
                             name:    it.name,
@@ -1354,6 +1413,8 @@
                 status: "Draft",
                 sourcePoNo: payload.poRef,
                 warehouse: payload.warehouse || "",
+                distRule: payload.distRule || "",
+                totals: payload.totals || null,
                 notes: payload.vendorNotes || "",
                 lines: acceptedItems.map(item => ({
                     itemCode: item.sku,
@@ -1428,163 +1489,10 @@
         function renderTable() {
             const fPoRef = document.getElementById("fPoRef").value.toLowerCase();
             const fStatus = document.getElementById("fStatus").value;
-            const fDateFrom = document.getElementById("fDateFrom").value;
-            const fDateTo = document.getElementById("fDateTo").value;
-
-            const all = getList();
-
-            if (document.getElementById("sumTotal")) {
-                document.getElementById("sumTotal").textContent = all.length;
-            }
-            document.getElementById("sumPending").textContent = all.filter(p => p.status === "Open").length;
-            document.getElementById("sumReviewed").textContent = all.filter(p => p.status === "Closed").length;
-            document.getElementById("sumConfirmed").textContent = all.filter(p => p.status === "Rejected").length;
-
-            const list = all.filter(p => {
-                if (fPoRef  && !p.poRef.toLowerCase().includes(fPoRef))    return false;
-                // fVendor filter now searches customer name
-                if (fVendor && !p.customer.toLowerCase().includes(fVendor)) return false;
-                if (fStatus && p.status !== fStatus)                         return false;
-                if (fDateFrom && p.poDate < fDateFrom)                       return false;
-                if (fDateTo   && p.poDate > fDateTo)                         return false;
-                return true;
-            });
-
-            const container = document.getElementById("poContainer");
-            if (!list.length) {
-                container.innerHTML = '<div style="text-align:center;padding:28px;color:#6b7280;">No data found.</div>';
-                return;
-            }
-
-            // Group by vendorName (SIC / CTU) — not by customer
-            const groupedOrders = {};
-            list.forEach(p => {
-                const grp = p.vendorName || "Unknown";
-                if (!groupedOrders[grp]) groupedOrders[grp] = [];
-                groupedOrders[grp].push(p);
-            });
-
-            // Vendor group labels
-            const vendorMeta = {
-                SIC: { label: "SIC — Supplier Pakan & Feed", icon: "bi-basket3-fill", color: "#2563eb" }
-            };
-
-            const canSelect = ["Open"];
-            let html = "";
-
-            ["SIC", ...Object.keys(groupedOrders).filter(k => k !== "SIC")]
-                .filter(k => groupedOrders[k])
-                .forEach(company => {
-                const companyOrders = groupedOrders[company];
-                const cleanCompanyStr = company.replace(/[^a-zA-Z0-9]/g, '');
-                const meta = vendorMeta[company] || { label: company, icon: "bi-building", color: "#374151" };
-
-                html += `
-                <div class="company-section mb-4 animate-in">
-                    <div class="company-header d-flex justify-content-between align-items-center w-100 pb-2 mb-3">
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="bi ${meta.icon}" style="color:${meta.color};font-size:18px;"></i>
-                            <h6 class="m-0" style="color:${meta.color};">${meta.label}</h6>
-                            <button class="btn btn-sm btn-outline-secondary px-2 py-0 border fw-bold text-muted" style="font-size: 11px; height: 22px;" onclick="toggleExpandGroup('${cleanCompanyStr}', this)">
-                                <i class="bi bi-arrows-expand me-1" style="font-size: 10px;"></i><span class="exp-text">Expand All</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="table-responsive" style="border: 1px solid var(--line); border-radius: 8px;">
-                        <table class="table table-hover mb-0" style="margin:0; border:0;">
-                            <thead style="background: var(--soft);">
-                                <tr>
-                                    <th style="width:40px;">
-                                        <input type="checkbox" class="group-select-all" data-target="group-${cleanCompanyStr}" onchange="toggleSelectGroup(this)">
-                                    </th>
-                                    <th style="width:40px;"></th>
-                                    <th>PO Reference</th>
-                                    <th>Customer</th>
-                                    <th>Whse</th>
-                                    <th>PO Date</th>
-                                    <th>Total Items</th>
-                                    <th>Total Qty</th>
-                                    <th>Status</th>
-                                    <th style="width:100px;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-
-                companyOrders.forEach((p, idx) => {
-                    const selectable = canSelect.includes(p.status);
-                    const totalItems = p.items ? p.items.length : 0;
-                    const totalQty = p.items ? p.items.reduce((s, r) => s + r.origQty, 0) : 0;
-
-                    const expandId = `exp-${cleanCompanyStr}-${idx}`;
-
-                    const checkbox = selectable
-                        ? `<input type="checkbox" class="row-check group-${cleanCompanyStr}" data-ref="${p.poRef}" data-exp="${expandId}" onchange="handleRowCheck(this)">`
-                        : `<input type="checkbox" disabled style="opacity:.3">`;
-
-                    const actionBtn = p.status === "Open"
-                        ? `<button class="btn-xs-review" onclick="openReviewModal('${p.poRef}')">Review</button>`
-                        : `<button class="btn-xs-view" onclick="openReviewModal('${p.poRef}')">View</button>`;
-
-                    html += `
-                    <tr>
-                        <td>${checkbox}</td>
-                        <td class="text-center">
-                            <button class="expand-btn" onclick="toggleExpand('${expandId}', this)">
-                                <i class="bi bi-chevron-down"></i>
-                            </button>
-                        </td>
-                        <td class="mono fw-bold text-dark">${p.poRef}</td>
-                        <td style="font-size:12px;">${p.customer || "-"}</td>
-                        <td><span class="badge bg-light text-dark border-secondary-subtle fw-medium">${p.whse}</span></td>
-                        <td>${p.poDate}</td>
-                        <td>${totalItems}</td>
-                        <td>${totalQty.toLocaleString()}</td>
-                        <td>${statusTag(p.status)}</td>
-                        <td>${actionBtn}</td>
-                    </tr>
-                    <tr class="expand-row" id="${expandId}">
-                        <td colspan="10" class="p-0">
-                            <div class="expand-content">
-                                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase;"><i class="bi bi-box-seam me-1"></i> Line Items</div>
-                                <table class="expand-table m-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Item Code</th>
-                                            <th>Item Name</th>
-                                            <th class="text-center">Qty</th>
-                                            <th class="text-end">Price / Unit</th>
-                                            <th class="text-end">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${(p.items || []).map(item => `
-                                            <tr>
-                                                <td class="mono" style="color: #475569;">${item.sku}</td>
-                                                <td class="fw-bold">${item.name}</td>
-                                                <td class="text-center" style="font-weight: 700; color: #2563eb;">${item.origQty.toLocaleString()}</td>
-                                                <td class="text-end">${fmt(item.price)}</td>
-                                                <td class="text-end fw-bold">${fmt(item.origQty * item.price)}</td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </td>
-                    </tr>`;
-                });
-
-                html += `</tbody></table></div></div>`;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function renderTable() {
-            const fPoRef = document.getElementById("fPoRef").value.toLowerCase();
-            const fStatus = document.getElementById("fStatus").value;
-            const fDateFrom = document.getElementById("fDateFrom").value;
-            const fDateTo = document.getElementById("fDateTo").value;
+            const fCustomer = document.getElementById("fCustomer").value;
+            const fBasis = document.getElementById("fDateBasis").value; // poDate (Posting Date) | deliveryDate
+            const fDateFrom = _dateRange.from;
+            const fDateTo = _dateRange.to;
 
             const all = getList();
             if (document.getElementById("sumTotal")) {
@@ -1595,12 +1503,14 @@
             document.getElementById("sumConfirmed").textContent = all.filter(p => p.status === "Rejected").length;
 
             const list = all.filter(p => {
-                const haystack = [p.poRef, p.customer, p.vendorName, p.whse].join(" ").toLowerCase();
+                const haystack = [p.poRef, p.customer, p.whse, p.whseName].join(" ").toLowerCase();
+                const dateVal = (fBasis === "deliveryDate" ? p.deliveryDate : p.poDate) || "";
                 if (fPoRef && !haystack.includes(fPoRef)) return false;
+                if (fCustomer && p.customer !== fCustomer) return false;
                 if (p.status === "Closed") return false;
                 if (fStatus && p.status !== fStatus) return false;
-                if (fDateFrom && p.poDate < fDateFrom) return false;
-                if (fDateTo && p.poDate > fDateTo) return false;
+                if (fDateFrom && dateVal < fDateFrom) return false;
+                if (fDateTo && dateVal > fDateTo) return false;
                 return true;
             });
 
@@ -1635,15 +1545,14 @@
                         </td>
                         <td class="mono fw-bold text-dark">${p.poRef}<div style="margin-top:3px;">${statusTag(p.status)}</div></td>
                         <td>${p.poDate || "-"}</td>
+                        <td>${p.deliveryDate || "-"}</td>
                         <td style="font-size:12px;">${p.customer || "-"}</td>
-                        <td>${p.vendorName || "-"}</td>
-                        <td><span class="badge bg-light text-dark border-secondary-subtle fw-medium">${p.whse || "-"}</span></td>
                         <td>${totalItems}</td>
                         <td class="text-end fw-bold">${totalQty.toLocaleString()}</td>
                         <td class="action-cell">${actionBtns}</td>
                     </tr>
                     <tr class="expand-row" id="${expandId}">
-                        <td colspan="10" class="p-0">
+                        <td colspan="9" class="p-0">
                             <div class="expand-content">
                                 <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px;text-transform:uppercase;"><i class="bi bi-box-seam me-1"></i>Line Items - ${p.poRef}</div>
                                 <table class="expand-table m-0">
@@ -1681,10 +1590,9 @@
                                 <th style="width:40px;"><input type="checkbox" onchange="toggleSelectAll(this)"></th>
                                 <th style="width:40px;"></th>
                                 <th>PO Reference</th>
-                                <th>PO Date</th>
+                                <th>Posting Date</th>
+                                <th>Delivery Date</th>
                                 <th>Customer</th>
-                                <th>Vendor</th>
-                                <th>Whse</th>
                                 <th>Total Items</th>
                                 <th class="text-end">Total Qty</th>
                                 <th style="width:100px;text-align:center;">Action</th>
@@ -1728,13 +1636,36 @@
             updateBulkBar();
         }
 
-        function resetFilter() {
-            ["fPoRef", "fDateFrom", "fDateTo"]
-                .forEach(id => document.getElementById(id).value = "");
-            document.getElementById("fStatus").value = "Open";
-            renderTable();
+        // Range tanggal dalam 1 kolom (seperti Forecast List); dasar tanggal: Posting Date / Delivery Date
+        let _dateRange = { from: "", to: "" };
+        let _datePicker = null;
+
+        function setupListFilters() {
+            const customers = [...new Set(getList().map(p => p.customer).filter(Boolean))].sort();
+            document.getElementById("fCustomer").innerHTML = `<option value="">Semua Customer</option>` +
+                customers.map(c => `<option value="${c.replace(/"/g, "&quot;")}">${c}</option>`).join("");
+            _datePicker = flatpickr("#fDateRange", {
+                mode: "range", dateFormat: "d-M-y", locale: { rangeSeparator: " s/d ", firstDayOfWeek: 1 },
+                onChange: (sel) => {
+                    if (sel.length === 1) return;
+                    _dateRange = sel.length ? { from: flatpickr.formatDate(sel[0], "Y-m-d"), to: flatpickr.formatDate(sel[1], "Y-m-d") } : { from: "", to: "" };
+                    renderTable();
+                },
+                onClose: (sel, s, fp) => { if (sel.length === 1) fp.setDate([sel[0], sel[0]], true); }
+            });
+            ["fCustomer", "fStatus", "fDateBasis"].forEach(id => document.getElementById(id).addEventListener("change", renderTable));
+            document.getElementById("fPoRef").addEventListener("input", renderTable);
         }
 
+        function resetFilter() {
+            document.getElementById("fPoRef").value = "";
+            document.getElementById("fCustomer").value = "";
+            document.getElementById("fDateBasis").value = "poDate";
+            document.getElementById("fStatus").value = "Open";
+            _datePicker.clear();
+            _dateRange = { from: "", to: "" };
+            renderTable();
+        }
         // =============================
         // BULK SELECTION
         // =============================
@@ -1815,8 +1746,17 @@
             document.getElementById("mDelivery").textContent = currentPO.deliveryDate || "-";
             document.getElementById("mContact").textContent = currentPO.contact || "-";
             document.getElementById("mAddress").textContent = currentPO.address || "-";
-            document.getElementById("mWhseSelect").value = currentPO.whse || "WH-MAIN";
+            // Warehouse: nama warehouse dari PO customer + opsi warehouse vendor
+            const whOpts = [...new Set([currentPO.whseName || currentPO.whse, "WH-MAIN", "WH-NORTH", "WH-EAST"].filter(Boolean))];
+            document.getElementById("mWhseSelect").innerHTML = whOpts.map(w => `<option value="${w}">${w}</option>`).join("");
+            document.getElementById("mWhseSelect").value = currentPO.whseName || currentPO.whse || "WH-MAIN";
             document.getElementById("mWhseSelect").disabled = isReadOnly;
+            document.getElementById("mSoDate").value = todayYMD();          // otomatis hari ini, bisa diedit
+            document.getElementById("mSoDate").disabled = isReadOnly;
+            document.getElementById("mDistRule").value = currentPO.distRule || "";
+            document.getElementById("mDistRule").disabled = isReadOnly;
+            ["mDiscount", "mFreight", "mRounding"].forEach(id => { const el = document.getElementById(id); el.value = 0; el.disabled = isReadOnly; });
+            switchSoTab(document.querySelector(".so-tab[data-pane=paneContents]"));
             document.getElementById("mStatusBadge").innerHTML = statusTag(currentPO.status);
             document.getElementById("mPoNotes").textContent = currentPO.notes || "—";
             document.getElementById("mVendorNotes").value = "";
@@ -1827,8 +1767,8 @@
             renderModalItems(isReadOnly);
 
             // Show/hide action buttons for read-only state
-            document.querySelector("#reviewModal .btn-reject").style.display = (isReadOnly || !allowRejectPO) ? "none" : "";
             document.querySelector("#reviewModal .btn-confirm").style.display = isReadOnly ? "none" : "";
+            document.getElementById("btnRecalc").style.display = isReadOnly ? "none" : "";
 
             document.getElementById("reviewModal").classList.add("open");
         }
@@ -1846,6 +1786,10 @@
                     : `<input type="number" class="qty-input" id="mQty-${i}"
                               value="${item.origQty}" min="0" max="${item.origQty}"
                               oninput="recalcModalRow(${i})">`;
+                // Price bisa di-entry manual
+                const priceEl = readOnly
+                    ? `<span style="font-weight:600;">${fmt(item.price)}</span>`
+                    : `<input type="number" class="price-input" id="mPrice-${i}" value="${item.price}" min="0" oninput="recalcModalRow(${i})">`;
 
                 const skuHtml = `<span style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-weight:700;font-size:0.88em;">${item.sku}</span>`;
 
@@ -1856,7 +1800,7 @@
                     <td style="font-weight:500;">${item.name}</td>
                     <td class="text-center fw-bold text-primary">${item.origQty}</td>
                     <td class="text-center" style="${allowEdit ? '' : 'display:none;'}">${inputEl}</td>
-                    <td>${fmt(item.price)}</td>
+                    <td>${priceEl}</td>
                     <td class="text-end pe-3 subtotal fw-bold" id="mSub-${i}">${fmt(subtotal)}</td>
                 </tr>`;
             }).join("");
@@ -1871,43 +1815,67 @@
         // =============================
         // REAL-TIME CALCULATION (Rules #2, #3)
         // =============================
+        // Price dapat di-entry manual: baca dari input bila ada
+        function modalPrice(i) {
+            const el = document.getElementById(`mPrice-${i}`);
+            return el ? (parseFloat(el.value) || 0) : currentPO.items[i].price;
+        }
+        function modalQty(i) {
+            const el = document.getElementById(`mQty-${i}`);
+            return el ? (parseInt(el.value) || 0) : currentPO.items[i].origQty;
+        }
+
         function recalcModalRow(i) {
             const item = currentPO.items[i];
             const input = document.getElementById(`mQty-${i}`);
-            const qty = parseInt(input.value) || 0;
+            const qty = modalQty(i);
 
             // Rule #3 — zero qty: red row highlight
             const row = document.getElementById(`mrow-${i}`);
             row.classList.toggle("row-zero", qty === 0);
 
             // Over-qty: red input border
-            input.classList.toggle("over", qty > item.origQty);
+            if (input) input.classList.toggle("over", qty > item.origQty);
 
-            document.getElementById(`mSub-${i}`).textContent = fmt(qty * item.price);
+            document.getElementById(`mSub-${i}`).textContent = fmt(qty * modalPrice(i));
 
             checkModalOverQty();
             recalcModalGrandTotal();
         }
 
+        // Tombol Recalculate: hitung ulang semua baris + total
+        function recalcAll() {
+            (currentPO?.items || []).forEach((_, i) => recalcModalRow(i));
+            recalcModalGrandTotal();
+            showToast("Total dihitung ulang");
+        }
+
+        function switchSoTab(btn) {
+            if (!btn) return;
+            document.querySelectorAll(".so-tab").forEach(b => b.classList.toggle("active", b === btn));
+            document.querySelectorAll(".so-pane").forEach(p => p.classList.toggle("active", p.id === btn.dataset.pane));
+        }
+
+        // Total mengikuti SAP B1: Total Before Discount, Discount, Freight, Rounding, Tax, Total Payment Due
+        function calcModalTotals() {
+            let before = 0;
+            (currentPO?.items || []).forEach((item, i) => { before += modalQty(i) * modalPrice(i); });
+            const discount = parseFloat(document.getElementById("mDiscount").value) || 0;
+            const freight = parseFloat(document.getElementById("mFreight").value) || 0;
+            const rounding = parseFloat(document.getElementById("mRounding").value) || 0;
+            const tax = Math.round((before - discount + freight) * 0.11);
+            return { before, discount, freight, rounding, tax, payment: before - discount + freight + tax + rounding };
+        }
+
         function recalcModalGrandTotal() {
-            let subtotal = 0;
-            (currentPO?.items || []).forEach((item, i) => {
-                const input = document.getElementById(`mQty-${i}`);
-                const qty = input ? (parseInt(input.value) || 0) : item.origQty;
-                subtotal += qty * item.price;
-            });
-            const tax = subtotal * 0.11;
-            const grand = subtotal + tax;
-            if (document.getElementById("mSubTotal")) document.getElementById("mSubTotal").textContent = fmt(subtotal);
-            if (document.getElementById("mTaxTotal")) document.getElementById("mTaxTotal").textContent = fmt(tax);
-            document.getElementById("mGrandTotal").textContent = fmt(grand);
+            const t = calcModalTotals();
+            document.getElementById("mSubTotal").textContent = fmt(t.before);
+            document.getElementById("mTaxTotal").textContent = fmt(t.tax);
+            document.getElementById("mGrandTotal").textContent = fmt(t.payment);
         }
 
         function checkModalOverQty() {
-            const hasOver = (currentPO?.items || []).some((item, i) => {
-                const input = document.getElementById(`mQty-${i}`);
-                return input && (parseInt(input.value) || 0) > item.origQty;
-            });
+            const hasOver = (currentPO?.items || []).some((item, i) => modalQty(i) > item.origQty);
             document.getElementById("mWarnBanner").classList.toggle("visible", hasOver);
         }
 
@@ -1917,41 +1885,35 @@
         // =============================
         function buildPayload() {
             const items = currentPO.items.map((item, i) => {
-                const input = document.getElementById(`mQty-${i}`);
-                const approvedQty = input ? (parseInt(input.value) || 0) : item.origQty;
-                const subtotal = approvedQty * item.price; // price is read-only, from data
+                const approvedQty = modalQty(i);
+                const unitPrice = modalPrice(i);          // price bisa di-entry manual
+                const subtotal = approvedQty * unitPrice;
 
                 let lineStatus = "full";
                 if (approvedQty === 0) lineStatus = "rejected";
                 else if (approvedQty < item.origQty) lineStatus = "partial";
 
-                return {
-                    sku: item.sku,
-                    name: item.name,
-                    origQty: item.origQty,
-                    approvedQty,
-                    unitPrice: item.price,    // Rule #4 — price is fixed, not user-editable
-                    subtotal,
-                    lineStatus
-                };
+                return { sku: item.sku, name: item.name, origQty: item.origQty, approvedQty, unitPrice, subtotal, lineStatus };
             });
+            const totals = calcModalTotals();
 
             return {
                 action: "confirm",
                 poRef: currentPO.poRef,
                 customer: currentPO.customer || currentPO.vendor || "-",
                 warehouse: document.getElementById("mWhseSelect").value,
-                soDate: todayYMD(),
+                soDate: document.getElementById("mSoDate").value || todayYMD(),   // Tanggal Sales Order
+                distRule: document.getElementById("mDistRule").value.trim(),       // Dist Rule
                 poDate: currentPO.poDate,
                 deliveryDate: currentPO.deliveryDate,
                 vendorNotes: document.getElementById("mVendorNotes").value.trim(),
                 confirmedBy: user.email,
                 confirmedAt: new Date().toISOString(),
                 items,
-                grandTotal: items.reduce((s, r) => s + r.subtotal, 0)
+                totals,
+                grandTotal: totals.payment
             };
         }
-
         // =============================
         // CONFIRM MODAL (Step 2)
         // =============================
@@ -1965,7 +1927,9 @@
             <div class="mc-row"><span class="lbl">PO Reference</span><span class="val">${payload.poRef}</span></div>
             <div class="mc-row"><span class="lbl">Customer</span><span class="val">${payload.customer}</span></div>
             <div class="mc-row"><span class="lbl">Warehouse</span><span class="val text-success">${payload.warehouse}</span></div>
+            <div class="mc-row"><span class="lbl">Tanggal Sales Order</span><span class="val">${payload.soDate}</span></div>
             <div class="mc-row"><span class="lbl">Delivery Date</span><span class="val">${payload.deliveryDate || "-"}</span></div>
+            <div class="mc-row"><span class="lbl">Dist Rule</span><span class="val">${payload.distRule || "-"}</span></div>
             <div style="margin:12px 0 4px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;">
                 Approved Items (${approved.length})
             </div>
@@ -1986,7 +1950,7 @@
                 <span class="val">0 pcs (rejected)</span>
             </div>`).join("")}` : ""}
             <div class="mc-row" style="margin-top:10px;">
-                <span class="lbl" style="font-weight:700;">Grand Total</span>
+                <span class="lbl" style="font-weight:700;">Total Payment Due</span>
                 <span class="val" style="color:#166534;font-size:15px;">${fmt(payload.grandTotal)}</span>
             </div>
             ${payload.vendorNotes

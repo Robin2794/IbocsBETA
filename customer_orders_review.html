@@ -93,8 +93,7 @@
                                     <th>No Forecast</th>
                                     <th>Vendor</th>
                                     <th>Plan</th>
-                                    <th>Week</th>
-                                    <th>Farm</th>
+                                    <th>Unit</th>
                                     <th>Warehouse</th>
                                     <th class="text-end">Total Qty</th>
                                     <th class="text-end">Total Amount</th>
@@ -117,6 +116,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="forecast_master.js"></script>
+    <script src="po_feed_helpers.js"></script>
     <script src="sidebar.js"></script>
     <script>
         new SidebarSystem(null, "orders").render();
@@ -166,17 +166,10 @@
                 return acc;
             }, { qty:0, amount:0 });
         }
-        function getVendorCode(fc) {
-            const firstLine = (fc.lines || []).find(l => l.vendorCode);
-            return fc.vendorCode || firstLine?.vendorCode || "VND-SIC";
-        }
-        function getVendorText(fc) {
-            const code = getVendorCode(fc);
-            if (fc.vendorName) return `${code} - ${fc.vendorName}`;
-            return code === "VND-CTU" ? "VND-CTU - CTU" : "VND-SIC - SIC";
-        }
+        function getVendorCode(fc) { return fcVendorCode(fc); }
+        function getVendorText(fc) { return fcVendorName(fc); } // Vendor = Vendor Name
         function getPlanText(fc) {
-            return fc.planName || fc.planDesc || fc.planNo || "-";
+            return fc.namaPlasma || fc.planDesc || fc.planName || fc.planNo || "-";
         }
         function forecastStatus(fc) {
             const orders = JSON.parse(localStorage.getItem(LS_ORDERS) || "[]");
@@ -194,14 +187,31 @@
             const ids = batch?.fcNos || [];
             forecasts = ids.map(id => getAllFc().find(f => f.fcNo === id)).filter(Boolean).map(fc => {
                 const st = forecastStatus(fc);
-                return { ...fc, selected: st.status !== "Error", validationStatus: st.status, validationMessage: st.message };
+                const poForm = { poDate: todayYMD(), remarks: "", transport: emptyTransport() };
+                return { ...fc, selected: st.status !== "Error", validationStatus: st.status, validationMessage: st.message, poForm };
             });
+            forecasts.forEach(fc => expanded.add(fc.fcNo)); // detail & isian PO langsung terbuka
+        }
+
+        // Isian PO (Tanggal PO, Remarks, Transport) per forecast
+        function setForm(id, path, value) {
+            const fc = forecasts.find(f => f.fcNo === id);
+            if (!fc) return;
+            const parts = path.split(".");
+            let o = fc.poForm;
+            while (parts.length > 1) o = o[parts.shift()];
+            o[parts[0]] = value;
+        }
+        function formInput(id, path, label, value, type, extra) {
+            const t = type || "text";
+            return `<div><label class="form-label mb-1" style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">${label}</label>
+                <input type="${t}" class="form-control form-control-sm" value="${esc(value)}" ${extra || ""} onchange="setForm('${id}','${path}',this.value)"></div>`;
         }
         function filteredForecasts() {
             const status = document.getElementById("fStatus").value;
             const q = document.getElementById("fSearch").value.trim().toLowerCase();
             return forecasts.filter(fc => {
-                const haystack = [fc.fcNo, getVendorText(fc), getPlanText(fc), fc.company, fc.farm, fc.warehouse, fc.period, fc.week].join(" ").toLowerCase();
+                const haystack = [fc.fcNo, getVendorText(fc), getPlanText(fc), fc.company, fc.farm, fc.warehouse, fcWarehouseName(fc)].join(" ").toLowerCase();
                 if (status && fc.validationStatus !== status) return false;
                 if (q && !haystack.includes(q)) return false;
                 return true;
@@ -226,6 +236,8 @@
         function detailRow(fc) {
             const totals = getTotals(fc);
             const tax = Math.round(totals.amount * 0.11);
+            const id = esc(fc.fcNo);
+            const f = fc.poForm, t = f.transport;
             const lineRows = (fc.lines || []).map(line => {
                 const qty = lineQty(line);
                 const price = linePrice(line);
@@ -234,14 +246,14 @@
                     <td>${esc(line.itemName || "-")}</td>
                     <td class="text-end">${fmtQty(qty)}</td>
                     <td>Kg</td>
-                    <td>${esc(fc.warehouse || "-")}</td>
+                    <td>${esc(fcWarehouseName(fc))}</td>
                     <td class="text-end">${fmtAmount(price)}</td>
                     <td class="text-end">0%</td>
                     <td>PPN</td>
                     <td class="text-end fw-bold">${fmtAmount(qty * price)}</td>
                 </tr>`;
             }).join("");
-            return `<tr><td colspan="11"><div class="detail-panel">
+            return `<tr><td colspan="10"><div class="detail-panel">
                 <div class="${fc.validationStatus === "Error" ? "text-danger" : fc.validationStatus === "Warning" ? "text-warning" : "text-success"} small mb-2">
                     <i class="bi ${fc.validationStatus === "Error" ? "bi-exclamation-circle" : "bi-check-circle"} me-1"></i>${esc(fc.validationMessage)}
                 </div>
@@ -250,18 +262,40 @@
                     <div>
                         <div class="info-line"><div class="info-label">No Forecast</div><div class="info-value">${esc(fc.fcNo)}</div></div>
                         <div class="info-line"><div class="info-label">Plan</div><div class="info-value">${esc(getPlanText(fc))}</div></div>
+                        <div class="info-line"><div class="info-label">Warehouse</div><div class="info-value">${esc(fcWarehouseName(fc))}</div></div>
                         <div class="info-line"><div class="info-label">Total Qty</div><div class="info-value">${fmtQty(totals.qty)} Kg</div></div>
                         <div class="info-line"><div class="info-label">Net</div><div class="info-value">${fmtAmount(totals.amount)}</div></div>
-                        <div class="info-line"><div class="info-label">Total Amount</div><div class="info-value">${fmtAmount(totals.amount + tax)}</div></div>
                     </div>
                     <div>
                         <div class="info-line"><div class="info-label">Tgl Forecast</div><div class="info-value">${esc(fc.fcDate || "-")}</div></div>
-                        <div class="info-line"><div class="info-label">Vendor Code & Name</div><div class="info-value">${esc(getVendorText(fc))}</div></div>
-                        <div class="info-line"><div class="info-label">Farm</div><div class="info-value">${esc(fc.farm || "-")}</div></div>
-                        <div class="info-line"><div class="info-label">Amount</div><div class="info-value">${fmtAmount(totals.amount)}</div></div>
-                        <div class="info-line"><div class="info-label">Tax</div><div class="info-value">${fmtAmount(tax)}</div></div>
+                        <div class="info-line"><div class="info-label">Vendor Name</div><div class="info-value">${esc(getVendorText(fc))}</div></div>
+                        <div class="info-line"><div class="info-label">Unit</div><div class="info-value">${esc(fc.farm || "-")}</div></div>
+                        <div class="info-line"><div class="info-label">Lokasi Pengambilan</div><div class="info-value">${esc(fc.pickupLocation || "-")}</div></div>
+                        <div class="info-line"><div class="info-label">Total Amount (+Tax)</div><div class="info-value">${fmtAmount(totals.amount + tax)}</div></div>
                     </div>
                 </div>
+
+                <div class="mini-title">Purchase Order</div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3">${formInput(id, "poDate", "Tanggal Purchase Order", f.poDate, "date")}</div>
+                    <div class="col-md-9">${formInput(id, "remarks", "Remarks", f.remarks, "text", 'placeholder="Catatan untuk PO (opsional)"')}</div>
+                </div>
+
+                <div class="mini-title">Transport</div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3">${formInput(id, "transport.vendorCode", "Vendor Code", t.vendorCode)}</div>
+                    <div class="col-md-3">${formInput(id, "transport.vendorName", "Vendor Name", t.vendorName)}</div>
+                    <div class="col-md-3">${formInput(id, "transport.driverName", "Driver", t.driverName)}</div>
+                    <div class="col-md-3">${formInput(id, "transport.billOfLading", "Bill of Lading", t.billOfLading)}</div>
+                    <div class="col-md-3">${formInput(id, "transport.licenseNumber", "License Number", t.licenseNumber)}</div>
+                    <div class="col-md-3">${formInput(id, "transport.containerNumber", "Container Number", t.containerNumber)}</div>
+                    <div class="col-md-3">${formInput(id, "transport.departureTime", "Jam Berangkat", t.departureTime, "time")}</div>
+                    <div class="col-md-3">${formInput(id, "transport.arrivalTime", "Jam Kedatangan", t.arrivalTime, "time")}</div>
+                    <div class="col-md-3">${formInput(id, "transport.servicePriceKg", "Service Price / KG", t.servicePriceKg, "number", 'min="0"')}</div>
+                    <div class="col-md-3">${formInput(id, "transport.totalService", "Total Service", t.totalService, "number", 'min="0"')}</div>
+                    <div class="col-md-6">${formInput(id, "transport.remarks", "Transport Remarks", t.remarks)}</div>
+                </div>
+
                 <div class="mini-title">Item Lines</div>
                 <table class="table table-sm mb-0">
                     <thead><tr><th>Item Code</th><th>Item Name</th><th class="text-end">Qty</th><th>UoM</th><th>Whse</th><th class="text-end">Unit Price</th><th class="text-end">Discount</th><th>Tax Code</th><th class="text-end">Total</th></tr></thead>
@@ -271,7 +305,7 @@
         }
         function render() {
             if (!forecasts.length) {
-                document.getElementById("reviewBody").innerHTML = `<tr><td colspan="11" class="empty-state"><i class="bi bi-inbox d-block fs-1 mb-2"></i>Tidak ada batch review. Pilih forecast dari Customer Orders dulu.</td></tr>`;
+                document.getElementById("reviewBody").innerHTML = `<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox d-block fs-1 mb-2"></i>Tidak ada batch review. Pilih forecast dari Customer Orders dulu.</td></tr>`;
                 renderSummary();
                 return;
             }
@@ -290,7 +324,7 @@
                     acc.amount += t.amount;
                     return acc;
                 }, { qty:0, amount:0 });
-                html += `<tr class="group-row"><td colspan="11"><i class="bi bi-building me-2"></i>${esc(vendor)} <span class="text-muted ms-2 fw-normal">${items.length} forecast - ${fmtQty(groupTotals.qty)} qty - ${fmtAmount(groupTotals.amount)}</span></td></tr>`;
+                html += `<tr class="group-row"><td colspan="10"><i class="bi bi-building me-2"></i>${esc(vendor)} <span class="text-muted ms-2 fw-normal">${items.length} forecast - ${fmtQty(groupTotals.qty)} qty - ${fmtAmount(groupTotals.amount)}</span></td></tr>`;
                 items.forEach(fc => {
                     const totals = getTotals(fc);
                     const id = esc(fc.fcNo);
@@ -300,9 +334,8 @@
                         <td><span class="source-chip"><i class="bi bi-link-45deg"></i>${esc(fc.fcNo)}</span></td>
                         <td class="fw-semibold">${esc(getVendorText(fc))}</td>
                         <td title="${esc(getPlanText(fc))}">${esc(getPlanText(fc))}</td>
-                        <td>${esc(fc.period || fc.week || "-")}</td>
                         <td>${esc(fc.farm || "-")}</td>
-                        <td>${esc(fc.warehouse || "-")}</td>
+                        <td>${esc(fcWarehouseName(fc))}</td>
                         <td class="text-end">${fmtQty(totals.qty)}</td>
                         <td class="text-end fw-bold">${fmtAmount(totals.amount)}</td>
                         <td><button class="btn-review btn-primary-soft" onclick="toggleDetail('${id}')"><i class="bi ${expanded.has(fc.fcNo) ? "bi-chevron-up" : "bi-chevron-down"}"></i>Detail</button></td>
@@ -310,7 +343,7 @@
                     if (expanded.has(fc.fcNo)) html += detailRow(fc);
                 });
             });
-            document.getElementById("reviewBody").innerHTML = html || `<tr><td colspan="11" class="empty-state">Tidak ada data sesuai filter.</td></tr>`;
+            document.getElementById("reviewBody").innerHTML = html || `<tr><td colspan="10" class="empty-state">Tidak ada data sesuai filter.</td></tr>`;
             renderSummary();
         }
         function toggleSelect(id, selected) {
@@ -335,6 +368,7 @@
         }
         function confirmGenerate() {
             const selected = forecasts.filter(fc => fc.selected && fc.validationStatus !== "Error");
+            if (selected.some(fc => !fc.poForm.poDate)) { alert("Tanggal Purchase Order wajib diisi untuk setiap PO."); return; }
             const date = todayYMD();
             const orders = JSON.parse(localStorage.getItem(LS_ORDERS) || "[]");
             const orderLines = JSON.parse(localStorage.getItem(LS_ORDER_LINES) || "{}");
@@ -351,22 +385,28 @@
                     uom: "Kg",
                     whse: fc.warehouse || ""
                 })).filter(line => line.sku && line.qty > 0);
+                const f = fc.poForm;
                 orders.unshift({
                     no: poNo,
                     customerName: fc.company || "Customer",
                     customer: fc.customerCode || fc.company || "Customer",
-                    date: date,
+                    date: f.poDate || date,
                     requiredDate: fc.fcDate || date,
                     total: Math.round(totals.amount * 1.11),
                     status: "Open",
                     warehouse: fc.warehouse || "",
+                    warehouseName: fcWarehouseName(fc),
+                    unit: fc.farm || "",
+                    pickupLocation: fc.pickupLocation || "",
                     planNo: fc.planNo || "",
                     planName: getPlanText(fc),
+                    planDesc: getPlanText(fc),
                     fcRef: fc.fcNo,
-                    week: fc.period || fc.week || "",
                     vendorCode: getVendorCode(fc).replace("VND-", ""),
+                    vendorName: fcVendorName(fc),
+                    transport: { ...f.transport },
                     sourceType: "Feed",
-                    remarks: `Generated from Forecast ${fc.fcNo}. 1 Forecast = 1 PO.`
+                    remarks: f.remarks ? f.remarks : `Generated from Forecast ${fc.fcNo}. 1 Forecast = 1 PO.`
                 });
                 orderLines[poNo] = lines;
                 soList.unshift({
@@ -383,6 +423,7 @@
                     planNo: fc.planNo || "",
                     fcRef: fc.fcNo,
                     warehouse: fc.warehouse || "",
+                    pickupLocation: fc.pickupLocation || "",
                     remarks: `Auto-created from PO Feed ${poNo}`,
                     lines: lines.map(line => ({
                         itemCode: line.sku,

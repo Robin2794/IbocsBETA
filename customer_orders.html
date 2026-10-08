@@ -7,6 +7,7 @@
     <title>Customer — Order List | IBOCS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -158,7 +159,7 @@
         .summary-box .lbl { font-size:12px; color:#6b7280; font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
         .summary-box .val { font-size:30px; font-weight:800; color:#15803d; line-height:1.1; margin-top:4px; }
         .summary-box .hint { color:#6b7280; font-size:12px; margin-top:4px; }
-        .filter-row { display:grid; grid-template-columns:minmax(220px,2fr) minmax(150px,1fr) minmax(145px,1fr) minmax(145px,1fr) auto; gap:14px; align-items:end; margin-bottom:16px; }
+        .filter-row { display:grid; grid-template-columns:minmax(220px,2fr) minmax(170px,1fr) minmax(240px,1.2fr) auto; gap:14px; align-items:end; margin-bottom:16px; }
         .filter-row label { display:block; font-size:12px; font-weight:800; color:#555; margin-bottom:5px; }
         .filter-row select,
         .filter-row input { width:100%; height:38px; border:1px solid #d5dae3; border-radius:7px; padding:0 10px; font-size:13px; background:#fff; }
@@ -378,21 +379,17 @@
                         <div class="filter-row">
                             <div>
                                 <label>Search Box</label>
-                                <input type="text" id="q" placeholder="Search by No. Forecast / Plan / Farm">
+                                <input type="text" id="q" placeholder="Search by No. Forecast / Plan / Unit">
                             </div>
                             <div>
-                                <label>Week</label>
-                                <select id="periodFilter">
-                                    <option value="ALL">Semua Week</option>
+                                <label>Company</label>
+                                <select id="companyFilter">
+                                    <option value="ALL">Semua Company</option>
                                 </select>
                             </div>
                             <div>
-                                <label>Dari Tanggal</label>
-                                <input type="date" id="fDateFrom">
-                            </div>
-                            <div>
-                                <label>Sampai</label>
-                                <input type="date" id="fDateTo">
+                                <label>Range Tanggal</label>
+                                <input type="text" id="dateRange" readonly placeholder="Pilih range tanggal" style="background:#fff;">
                             </div>
                             <div>
                                 <label>&nbsp;</label>
@@ -486,8 +483,8 @@
                                         <div class="po-value small" id="poPlanNo">-</div>
                                     </div>
                                     <div class="col-4">
-                                        <span class="po-label">Week</span>
-                                        <div class="po-value small" id="poWeek">-</div>
+                                        <span class="po-label">Lokasi Pengambilan</span>
+                                        <div class="po-value small" id="poPickup">-</div>
                                     </div>
                                 </div>
                             </div>
@@ -509,16 +506,12 @@
                                     <div class="po-label">Forecast Date</div>
                                     <div class="po-value small" id="modalFcDate">-</div>
                                 </div>
-                                <div class="col-md-2">
-                                    <div class="po-label">Period</div>
-                                    <div class="po-value small" id="modalFcPeriod">-</div>
-                                </div>
-                                <div class="col-md-2">
+<div class="col-md-2">
                                     <div class="po-label">Company</div>
                                     <div class="po-value small" id="modalFcCompany">-</div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="po-label">Farm</div>
+                                    <div class="po-label">Unit</div>
                                     <div class="po-value small" id="modalFcFarm">-</div>
                                 </div>
                                 <div class="col-md-3">
@@ -533,20 +526,17 @@
                                         <tr>
                                             <th>Item Code</th>
                                             <th>Item Name</th>
-                                            <th>Flag</th>
-                                            <th class="text-end">Rec. Qty</th>
-                                            <th class="text-end">Manual Adj.</th>
-                                            <th class="text-end">Final Qty</th>
+                                            <th class="text-end">Qty</th>
                                         </tr>
                                     </thead>
                                     <tbody id="modalFcLines">
-                                        <tr><td colspan="6" class="text-center text-muted py-2">-</td></tr>
+                                        <tr><td colspan="3" class="text-center text-muted py-2">-</td></tr>
                                     </tbody>
                                 </table>
                             </div>
                             <div class="d-flex gap-4 mt-2 ps-1" style="font-size:.8rem;">
                                 <span class="text-muted">Total Item: <strong id="modalFcTotalItem">0</strong></span>
-                                <span class="text-muted">Total Final Qty: <strong id="modalFcTotalFinal">0</strong></span>
+                                <span class="text-muted">Total Qty: <strong id="modalFcTotalFinal">0</strong></span>
                             </div>
                             </div><!-- /modalFcBody -->
                         </div>
@@ -635,12 +625,24 @@
                                     <span class="fw-bold" id="poSubtotal">Rp 0</span>
                                 </div>
                                 <div class="po-summary-row">
-                                    <span class="po-summary-label">Discount & Tax (11%)</span>
+                                    <span class="po-summary-label">Discount</span>
+                                    <span class="fw-bold" id="poDiscount">Rp 0</span>
+                                </div>
+                                <div class="po-summary-row">
+                                    <span class="po-summary-label">Freight</span>
+                                    <span class="fw-bold" id="poFreight">Rp 0</span>
+                                </div>
+                                <div class="po-summary-row">
+                                    <span class="po-summary-label">Rounding</span>
+                                    <span class="fw-bold" id="poRounding">Rp 0</span>
+                                </div>
+                                <div class="po-summary-row">
+                                    <span class="po-summary-label">Tax (11%)</span>
                                     <span class="fw-bold" id="poTax">Rp 0</span>
                                 </div>
                                 <hr>
                                 <div class="po-summary-row mt-2">
-                                    <span class="fw-bold text-dark">Total Amount Due</span>
+                                    <span class="fw-bold text-dark">Total Payment Due</span>
                                     <span class="po-summary-total" id="poTotalDue">Rp 0</span>
                                 </div>
                             </div>
@@ -889,7 +891,9 @@
     -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="forecast_master.js"></script>
+    <script src="po_feed_helpers.js"></script>
     <script src="sidebar.js"></script>
 
     <script>
@@ -959,17 +963,10 @@
         function getPendingForecasts() {
             const createdOrders = JSON.parse(localStorage.getItem("IBOCS_customer_orders") || "[]");
             const usedFcNos = new Set(createdOrders.map(o => o.fcRef).filter(Boolean));
-            return getFcList().filter(fc => fc.status === "Confirmed" && !usedFcNos.has(fc.fcNo));
+            return getFcList().filter(fc => fcReadyForPO(fc) && !usedFcNos.has(fc.fcNo));
         }
-        function getVendorCode(fc) {
-            const firstLine = (fc.lines || []).find(l => l.vendorCode);
-            return fc.vendorCode || firstLine?.vendorCode || "VND-SIC";
-        }
-        function getVendorText(fc) {
-            const code = getVendorCode(fc);
-            if (fc.vendorName) return `${code} - ${fc.vendorName}`;
-            return code === "VND-CTU" ? "VND-CTU - CTU" : "VND-SIC - SIC";
-        }
+        function getVendorCode(fc) { return fcVendorCode(fc); }
+        function getVendorText(fc) { return fcVendorName(fc); } // Vendor = Vendor Name
         function renderItemLinesTable(fc) {
             let totalQty = 0;
             const rows = (fc.lines || []).map(line => {
@@ -981,7 +978,7 @@
                         <td>${escapeHtml(line.itemName || "-")}</td>
                         <td style="text-align:right;">${fmt(qty)}</td>
                         <td>Kg</td>
-                        <td>${escapeHtml(fc.warehouse || "-")}</td>
+                        <td>${escapeHtml(fcWarehouseName(fc))}</td>
                     </tr>`;
             }).join("");
             return `
@@ -1059,11 +1056,16 @@
                 total: Math.round(amount * 1.11),
                 status: "Open",
                 warehouse: fc.warehouse || "",
+                warehouseName: fcWarehouseName(fc),
+                unit: fc.farm || "",
+                pickupLocation: fc.pickupLocation || "",
                 planNo: fc.planNo || "",
                 planName: fc.planName || fc.planDesc || "",
+                planDesc: fc.namaPlasma || fc.planDesc || fc.planName || "",
                 fcRef: fc.fcNo,
-                week: fc.period || fc.week || "",
                 vendorCode: getVendorCode(fc).replace("VND-", ""),
+                vendorName: fcVendorName(fc),
+                transport: emptyTransport(),
                 sourceType: "Feed",
                 remarks: `Generated from Forecast ${fc.fcNo}. 1 Forecast = 1 PO.`
             });
@@ -1098,7 +1100,6 @@
             markForecastCreated(fc);
             selectedFcNos.delete(fc.fcNo);
             render();
-            renderPoList();
             alert(`PO ${poNo} berhasil dibuat dari ${fc.fcNo}.`);
         }
         function renderSummary() {
@@ -1110,12 +1111,24 @@
             document.getElementById("summaryVendor").textContent = vendors.size;
         }
 
-        function setupPeriodFilter() {
-            const data = getPendingForecasts();
-            const periods = ["ALL", ...new Set(data.map(f => f.period || f.week || "Week 18"))];
-            document.getElementById("periodFilter").innerHTML = periods.map(p =>
-                `<option value="${p}">${p === "ALL" ? "Semua Week" : p}</option>`
-            ).join("");
+        let _dateRange = { from: "", to: "" };
+        let _datePicker = null;
+        const isoDate = d => flatpickr.formatDate(d, "Y-m-d");
+
+        function setupFilters() {
+            const companies = ["ALL", ...new Set(getPendingForecasts().map(f => f.company).filter(Boolean))];
+            document.getElementById("companyFilter").innerHTML = companies.map(c =>
+                `<option value="${escapeHtml(c)}">${c === "ALL" ? "Semua Company" : escapeHtml(c)}</option>`).join("");
+            // Range tanggal dalam 1 kolom (sama seperti filter Forecast List); kosong = semua tanggal
+            _datePicker = flatpickr("#dateRange", {
+                mode: "range", dateFormat: "d-M-y", locale: { rangeSeparator: " s/d ", firstDayOfWeek: 1 },
+                onChange: (sel) => {
+                    if (sel.length === 1) return;
+                    _dateRange = sel.length ? { from: isoDate(sel[0]), to: isoDate(sel[1]) } : { from: "", to: "" };
+                    applyFilter();
+                },
+                onClose: (sel, s, fp) => { if (sel.length === 1) fp.setDate([sel[0], sel[0]], true); }
+            });
         }
 
         let currentPage = 1;
@@ -1171,9 +1184,9 @@
 
         function resetFilter() {
             document.getElementById("q").value = "";
-            document.getElementById("periodFilter").value = "ALL";
-            document.getElementById("fDateFrom").value = "";
-            document.getElementById("fDateTo").value = "";
+            document.getElementById("companyFilter").value = "ALL";
+            _datePicker.clear();
+            _dateRange = { from: "", to: "" };
             currentPage = 1;
             render();
         }
@@ -1194,18 +1207,17 @@
 
         function render() {
             const q      = document.getElementById("q").value.trim().toLowerCase();
-            const period = document.getElementById("periodFilter").value || "ALL";
-            const from = document.getElementById("fDateFrom").value;
-            const to = document.getElementById("fDateTo").value;
+            const company = document.getElementById("companyFilter").value || "ALL";
+            const from = _dateRange.from;
+            const to = _dateRange.to;
             const container = document.getElementById("ordersContainer");
             const emptyState = document.getElementById("emptyState");
 
             renderSummary();
             const data = getPendingForecasts().filter(fc => {
-                const fcPeriod = fc.period || fc.week || "Week 18";
                 const fcDate = fc.fcDate || "";
-                const hay = [fc.fcNo, fc.planNo, fc.planName, fc.planDesc, fc.company, fc.farm, fc.warehouse, getVendorText(fc)].join(" ").toLowerCase();
-                if (period !== "ALL" && fcPeriod !== period) return false;
+                const hay = [fc.fcNo, fc.planNo, fc.planName, fc.planDesc, fc.namaPlasma, fc.company, fc.farm, fc.warehouse, fcWarehouseName(fc), getVendorText(fc)].join(" ").toLowerCase();
+                if (company !== "ALL" && fc.company !== company) return false;
                 if (from && fcDate < from) return false;
                 if (to && fcDate > to) return false;
                 if (q && !hay.includes(q)) return false;
@@ -1245,12 +1257,10 @@
                         </td>
                         <td><strong class="mono">${escapeHtml(fc.fcNo)}</strong><div style="margin-top:3px;"><span class="tag tag-ready">Belum Generate PO</span></div></td>
                         <td>${escapeHtml(fc.fcDate || "-")}</td>
-                        <td><span class="tag tag-feed">Feed</span></td>
                         <td>${escapeHtml(getVendorText(fc))}</td>
                         <td>${escapeHtml(fc.planNo || "-")}</td>
-                        <td>${escapeHtml(fc.period || fc.week || "-")}</td>
                         <td>${escapeHtml(fc.farm || "-")}</td>
-                        <td>${escapeHtml(fc.warehouse || "-")}</td>
+                        <td>${escapeHtml(fcWarehouseName(fc))}</td>
                         <td style="text-align:right;font-weight:800;color:#166534;">${fmt(calcTotalQty(fc))} kg</td>
                         <td class="action-cell">
                             <button type="button" class="action-btn" title="Review & Generate" onclick="reviewSingleForecast('${escapeHtml(fc.fcNo)}')">
@@ -1262,7 +1272,7 @@
                         </td>
                     </tr>
                     <tr class="expand-row" id="${expandId}">
-                        <td colspan="12" style="padding:0;">
+                        <td colspan="11" style="padding:0;">
                             <div class="expand-content">
                                 <div class="section-label"><i class="bi bi-box"></i>Item Lines - ${escapeHtml(fc.fcNo)}</div>
                                 <div class="table-wrap">${renderItemLinesTable(fc)}</div>
@@ -1280,11 +1290,9 @@
                                     <th style="width:36px;"></th>
                                     <th>No Forecast</th>
                                     <th>Tanggal</th>
-                                    <th>Source</th>
                                     <th>Vendor</th>
                                     <th>Plan No</th>
-                                    <th>Week</th>
-                                    <th>Farm</th>
+                                    <th>Unit</th>
                                     <th>Warehouse</th>
                                     <th style="text-align:right;">Total Qty</th>
                                     <th style="width:80px;text-align:center;">Aksi</th>
@@ -1324,11 +1332,7 @@
             if (!order) return;
 
             // Header Fields — derive vendor from order's vendorCode
-            const vendorMap = {
-                SIC: { code: "VND-SIC", name: "SIC — Supplier Pakan & Feed",      contact: "Agus Prasetyo" },
-                CTU: { code: "VND-CTU", name: "CTU — Supplier DOC / Bibit Ayam",  contact: "Rini Kusuma" }
-            };
-            const vendor = vendorMap[order.vendorCode] || vendorMap["SIC"];
+            const vendor = poVendorInfo(order.vendorCode);
 
             document.getElementById("poVendorCode").textContent = vendor.code;
             document.getElementById("poVendorName").textContent = vendor.name;
@@ -1339,9 +1343,9 @@
             const postingDate = formatDateShort(order.date);
             document.getElementById("poPostingDate").textContent = postingDate;
             document.getElementById("poDeliveryDate").textContent = order.requiredDate || postingDate;
-            document.getElementById("poWhse").textContent   = order.warehouse || "-";
+            document.getElementById("poWhse").textContent   = poWarehouseName(order);
             document.getElementById("poPlanNo").textContent = order.planNo || "-";
-            document.getElementById("poWeek").textContent   = order.week || "-";
+            document.getElementById("poPickup").textContent = order.pickupLocation || "-";
             const transport = order.transport || {};
             document.getElementById("poTransportVendorCode").textContent = transport.vendorCode || "-";
             document.getElementById("poTransportVendorName").textContent = transport.vendorName || "-";
@@ -1372,26 +1376,21 @@
 
                 document.getElementById("modalFcRef").textContent     = order.fcRef;
                 document.getElementById("modalFcDate").textContent    = fc ? fc.fcDate    : "-";
-                document.getElementById("modalFcPeriod").textContent  = fc ? fc.period    : order.week || "-";
                 document.getElementById("modalFcCompany").textContent = fc ? fc.company   : "-";
                 document.getElementById("modalFcFarm").textContent    = fc ? fc.farm      : "-";
-                document.getElementById("modalFcPlanDesc").textContent= fc ? fc.planDesc  : "-";
+                document.getElementById("modalFcPlanDesc").textContent= fc ? (fc.namaPlasma || fc.planDesc || fc.planName || "-") : (order.planDesc || "-");
 
                 const lines = fc ? (fc.lines || []) : [];
                 let totalFinal = 0;
                 document.getElementById("modalFcLines").innerHTML = lines.map(l => {
                     const fq = (Number(l.recommendedQty)||0) + (Number(l.manualAdjustment)||0);
                     totalFinal += fq;
-                    const flagCls = l.flag === "Manual" ? "badge bg-warning text-dark" : "badge bg-primary";
                     return `<tr>
                         <td class="mono">${l.itemCode}</td>
                         <td>${l.itemName}</td>
-                        <td><span class="${flagCls}" style="font-size:.7rem;">${l.flag||"Auto"}</span></td>
-                        <td class="text-end">${(l.recommendedQty||0).toLocaleString()}</td>
-                        <td class="text-end">${(l.manualAdjustment||0).toLocaleString()}</td>
                         <td class="text-end fw-bold text-success">${fq.toLocaleString()}</td>
                     </tr>`;
-                }).join("") || '<tr><td colspan="6" class="text-center text-muted py-2">No lines</td></tr>';
+                }).join("") || '<tr><td colspan="3" class="text-center text-muted py-2">No lines</td></tr>';
 
                 document.getElementById("modalFcTotalItem").textContent = lines.length;
                 document.getElementById("modalFcTotalFinal").textContent = totalFinal.toLocaleString();
@@ -1421,16 +1420,19 @@
                     <td class="text-end">${item.qty}</td>
                     <td>${itemUom}</td>
                     <td class="text-end">${rupiah(item.price)}</td>
-                    <td>WH-01</td>
+                    <td>${poWarehouseName(order)}</td>
                     <td class="text-end pe-3 fw-bold">${rupiah(sub)}</td>
                 </tr>`;
             });
 
-            // Summary
-            const tax = total * 0.11;
-            document.getElementById("poSubtotal").textContent = rupiah(total);
-            document.getElementById("poTax").textContent = rupiah(tax);
-            document.getElementById("poTotalDue").textContent = rupiah(total + tax);
+            // Summary (urutan seperti SAP B1)
+            const tt = poTotals(lines, order);
+            document.getElementById("poSubtotal").textContent = rupiah(tt.before);
+            document.getElementById("poDiscount").textContent = rupiah(tt.discount);
+            document.getElementById("poFreight").textContent  = rupiah(tt.freight);
+            document.getElementById("poRounding").textContent = rupiah(tt.rounding);
+            document.getElementById("poTax").textContent      = rupiah(tt.tax);
+            document.getElementById("poTotalDue").textContent = rupiah(tt.payment);
 
             // Logic Controller: Only Order Intake remains
             const s = order.status;
@@ -1551,13 +1553,10 @@
         // Init
         document.addEventListener("DOMContentLoaded", () => {
             new SidebarSystem(null, "orders").render();
-            setupPeriodFilter();
+            setupFilters();
             document.getElementById("q").addEventListener("input", applyFilter);
-            document.getElementById("periodFilter").addEventListener("change", applyFilter);
-            document.getElementById("fDateFrom").addEventListener("change", applyFilter);
-            document.getElementById("fDateTo").addEventListener("change", applyFilter);
+            document.getElementById("companyFilter").addEventListener("change", applyFilter);
             render();
-            renderPoList();
         });
 
         /* legacy code removed

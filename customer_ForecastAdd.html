@@ -685,6 +685,7 @@
         .wz-note { margin-left: auto; font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; color: #6b7280; }
         .wz-hint { display: block; font-size: 9px; font-weight: 500; letter-spacing: 0; text-transform: none; color: #a16207; margin-top: 1px; }
         .wz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1px; background: #eef0f5; }
+        .wz-grid.c4w { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); }
         .wz-grid.c3w { grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1fr); }
         .wz-grid.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         .wz-f { background: #fff; padding: 10px 14px; min-width: 0; }
@@ -820,8 +821,7 @@
                     <div class="topbar">
                         <div>
                             <h1>Add Forecast</h1>
-                            <div class="subtext">Pilih plan, tentukan week, cek kalkulator kebutuhan pakan, lalu simpan
-                                dokumen forecast.</div>
+                            <div class="subtext">Pilih plan, cek informasi plan, input order, lalu simpan dokumen forecast. Forecast Period hanya membantu pencarian (tidak disimpan di dokumen).</div>
                         </div>
                         <div style="min-width:260px;">
                             <label class="form-label mb-1 small fw-bold text-muted">Forecast Period</label>
@@ -848,8 +848,7 @@
     <!-- Bulk Action Bar -->
     <div id="bulkActionBar"
         style="display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; padding:16px 24px; box-shadow:0 -4px 20px rgba(0,0,0,0.08); z-index:1000; justify-content:flex-end; gap:12px; align-items:center;">
-        <div class="text-muted small me-auto d-none d-md-block">Sistem akan membuat dokumen forecast terpisah sesuai
-            Forecast Period yang dipilih.</div>
+        <div class="text-muted small me-auto d-none d-md-block">Sistem akan membuat dokumen forecast terpisah untuk setiap plan yang dipilih.</div>
         <div style="font-weight:700; color:#1a237e;" class="me-3"><span id="bulkActionCount">0</span> Plan Dipilih</div>
         <button class="btn btn-primary px-4 fw-bold" style="border-radius:8px;" id="btnBulkSubmit"
             onclick="startReviewFlow()">
@@ -919,6 +918,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="master_data.js"></script>
     <script src="std_sap_data.js"></script>
+    <script src="forecast_core.js"></script>
     <script src="sidebar.js"></script>
     <script>
         // ─── SESSION GUARD ────────────────────────────────────────────────────────
@@ -939,294 +939,6 @@
         let _reviewData = {};
         let _reviewModalInst = null;
 
-        // ─── STD ANALYSIS ─────────────────────────────────────────────────────────
-        const STD = [
-            { d: 1, m: 0.00, v: 100.00, fd: 0.0010 },
-            { d: 2, m: 0.10, v: 99.90, fd: 0.0020 },
-            { d: 3, m: 0.10, v: 99.80, fd: 0.0030 },
-            { d: 4, m: 0.10, v: 99.70, fd: 0.0040 },
-            { d: 5, m: 0.10, v: 99.60, fd: 0.0050 },
-            { d: 6, m: 0.10, v: 99.50, fd: 0.0060 },
-            { d: 7, m: 0.10, v: 99.40, fd: 0.0070 },
-            { d: 8, m: 0.20, v: 99.20, fd: 0.0090 },
-            { d: 9, m: 0.20, v: 99.00, fd: 0.0120 },
-            { d: 10, m: 0.20, v: 98.80, fd: 0.0150 },
-            { d: 11, m: 0.20, v: 98.60, fd: 0.0180 },
-            { d: 12, m: 0.20, v: 98.40, fd: 0.0220 },
-            { d: 13, m: 0.20, v: 98.20, fd: 0.0260 },
-            { d: 14, m: 0.20, v: 98.00, fd: 0.0300 },
-            { d: 15, m: 0.20, v: 97.80, fd: 0.0350 },
-            { d: 16, m: 0.20, v: 97.60, fd: 0.0400 },
-            { d: 17, m: 0.20, v: 97.40, fd: 0.0450 },
-            { d: 18, m: 0.20, v: 97.20, fd: 0.0500 },
-            { d: 19, m: 0.20, v: 97.00, fd: 0.0560 },
-            { d: 20, m: 0.20, v: 96.80, fd: 0.0620 },
-            { d: 21, m: 0.20, v: 96.60, fd: 0.0680 },
-            { d: 22, m: 0.30, v: 96.30, fd: 0.0750 },
-            { d: 23, m: 0.30, v: 96.00, fd: 0.0820 },
-            { d: 24, m: 0.30, v: 95.70, fd: 0.0890 },
-            { d: 25, m: 0.30, v: 95.40, fd: 0.0960 },
-            { d: 26, m: 0.30, v: 95.10, fd: 0.1030 },
-            { d: 27, m: 0.30, v: 94.80, fd: 0.1100 },
-            { d: 28, m: 0.30, v: 94.50, fd: 0.1160 },
-            { d: 29, m: 0.30, v: 94.20, fd: 0.1220 },
-            { d: 30, m: 0.30, v: 93.90, fd: 0.1280 },
-            { d: 31, m: 0.30, v: 93.60, fd: 0.1330 },
-            { d: 32, m: 0.30, v: 93.30, fd: 0.1380 },
-            { d: 33, m: 0.30, v: 93.00, fd: 0.1420 },
-            { d: 34, m: 0.30, v: 92.70, fd: 0.1460 },
-            { d: 35, m: 0.30, v: 92.40, fd: 0.1500 },
-        ];
-
-        const PHASES = [
-            { code: "FEED-001", name: "Pakan Pre-Starter (S-0)", dayFrom: 1, dayTo: 7, uom: "Kg" },
-            { code: "FEED-002", name: "Pakan Starter (BR-1)", dayFrom: 8, dayTo: 21, uom: "Kg" },
-            { code: "FEED-004", name: "Pakan Finisher (BR-3)", dayFrom: 22, dayTo: 35, uom: "Kg" },
-        ];
-
-        // ─── DEMO PLANS (mapped from kandang aktif) ───────────────────────────────
-        let DEMO_PLANS = [];
-
-        let _sapPlansPool = [
-            {
-                planNo: "100004423", fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi",
-                location: "Pekalongan", id: "F0001364", wh: "F0001364", docQty: 9700, docType: "DOC Broiler",
-                ageLastPosting: 22, ageCurrent: 27, lastPostingDate: "29-Apr-26",
-                sapData: { mort: 269, lastPop: 9431, bw: 0.985, fcr: 1.297, fiAct: 1.242, fiCum: 12050, grpo: 22700, poItr: null, lastStok: 10650 }
-            },
-            {
-                planNo: "100004424", fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi",
-                location: "Blora", id: "F0001471", wh: "F0001471", docQty: 30800, docType: "DOC Broiler",
-                ageLastPosting: 19, ageCurrent: 24, lastPostingDate: "29-Apr-26",
-                sapData: { mort: 738, lastPop: 30370, bw: 0.75, fcr: 1.225, fiAct: 0.082, fiCum: 0.906, grpo: 43000, poItr: null, lastStok: 16600 }
-            },
-            {
-                planNo: "100004425", fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi",
-                location: "Klaten", id: "F0001470", wh: "F0001470", docQty: 7200, docType: "DOC Broiler",
-                ageLastPosting: 18, ageCurrent: 21, lastPostingDate: "1-May-26",
-                sapData: { mort: 446, lastPop: 6826, bw: 0.586, fcr: 1.212, fiAct: 0.08, fiCum: 0.674, grpo: 9000, poItr: null, lastStok: 3550 }
-            },
-            {
-                planNo: "100000271", fcStatus: "Draft", status: "Active", company: "PT AYM",
-                location: "Ponorogo", id: "F0000274", wh: "F0000274", docQty: 5000, docType: "DOC Broiler",
-                ageLastPosting: 12, ageCurrent: 14, lastPostingDate: "2-May-26",
-                sapData: { mort: 46, lastPop: 5004, bw: 0.345, fcr: 1.303, fiAct: 0.04, fiCum: 0.45, grpo: 4000, poItr: 1750 }
-            },
-            {
-                planNo: "100000272", fcStatus: "Draft", status: "Active", company: "PT AYM",
-                location: "Malang", id: "F0000073", wh: "F0000073", docQty: 8500, docType: "DOC Broiler",
-                ageLastPosting: 11, ageCurrent: 13, lastPostingDate: "1-May-26",
-                sapData: { mort: 155, lastPop: 8430, bw: 0.325, fcr: 1.113, fiAct: 0.059, fiCum: 0.359, grpo: 5500, poItr: 2450 }
-            },
-            {
-                planNo: "100000273", fcStatus: "Draft", status: "Active", company: "PT AYM",
-                location: "Tuban", id: "F0000173", wh: "F0000173", docQty: 9900, docType: "DOC Broiler",
-                ageLastPosting: 11, ageCurrent: 13, lastPostingDate: "1-May-26",
-                sapData: { mort: 329, lastPop: 9670, bw: 0.187, fcr: 1.244, fiAct: 0.031, fiCum: 0.227, grpo: 5000, poItr: 2750 }
-            },
-            {
-                planNo: "21000235", fcStatus: "Draft", status: "Active", company: "PT CTU",
-                location: "Pasuruan", id: "FSR0001", wh: "FSR0001", docQty: 9315, docType: "DOC Layer",
-                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
-                sapData: { mort: 386, lastPop: 8929, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 37700, poItr: null, lastStok: 1844, statusKalang: "GROWTH", kebutuhanMinggu: 4500, sisaKebutuhan: 18200 }
-            },
-            {
-                planNo: "21000236", fcStatus: "Draft", status: "Active", company: "PT CTU",
-                location: "Pasuruan", id: "FSR0002", wh: "FSR0002", docQty: 9460, docType: "DOC Layer",
-                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
-                sapData: { mort: 326, lastPop: 9134, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 37250, poItr: null, lastStok: 979, statusKalang: "GROWTH", kebutuhanMinggu: 3800, sisaKebutuhan: 15400 }
-            },
-            {
-                planNo: "21000237", fcStatus: "Draft", status: "Active", company: "PT CTU",
-                location: "Pasuruan", id: "FSR0003", wh: "FSR0003", docQty: 8940, docType: "DOC Layer",
-                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
-                sapData: { mort: 276, lastPop: 8664, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 31850, poItr: null, lastStok: 1537, statusKalang: "GROWTH", kebutuhanMinggu: 4200, sisaKebutuhan: 16800 }
-            },
-            {
-                planNo: "21000238", fcStatus: "Draft", status: "Active", company: "PT CTU",
-                location: "Pasuruan", id: "FSR0004", wh: "FSR0004", docQty: 9460, docType: "DOC Layer",
-                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
-                sapData: { mort: 291, lastPop: 9169, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 32150, poItr: null, lastStok: 836, statusKalang: "GROWTH", kebutuhanMinggu: 3600, sisaKebutuhan: 14400 }
-            },
-            {
-                planNo: "21000239", fcStatus: "Draft", status: "Active", company: "PT CTU",
-                location: "Pasuruan", id: "FSR0005", wh: "FSR0005", docQty: 9520, docType: "DOC Layer",
-                ageLastPosting: 98, ageCurrent: 98, lastPostingDate: "2-May-26",
-                sapData: { mort: 211, lastPop: 9309, bw: null, fcr: null, fiAct: null, fiCum: null, grpo: 22900, poItr: null, lastStok: 1415, statusKalang: "GROWTH", kebutuhanMinggu: 4100, sisaKebutuhan: 16400 }
-            },
-            { planNo: "PLAN-2026-008", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX A", id: "KDG-08", wh: "WH-KDG08", docQty: 22000, docType: "DOC Broiler Ross 308", age: 23 },
-            { planNo: "PLAN-2026-009", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX A", id: "KDG-09", wh: "WH-KDG09", docQty: 18000, docType: "DOC Broiler Cobb 500", age: 7 },
-            { planNo: "PLAN-2026-010", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX B", id: "KDG-10", wh: "WH-KDG10", docQty: 20000, docType: "DOC Broiler Ross 308", age: 11 },
-            { planNo: "PLAN-2026-018", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX A", id: "KDG-18", wh: "WH-KDG18", docQty: 25000, docType: "DOC Broiler Ross 308", age: 1 },
-            { planNo: "PLAN-2026-019", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX B", id: "KDG-19", wh: "WH-KDG19", docQty: 16000, docType: "DOC Broiler Cobb 500", age: 9 },
-            { planNo: "PLAN-2026-020", fcStatus: "Draft", status: "Active", company: "PT BMAX", farm: "Farm BMAX B", id: "KDG-20", wh: "WH-KDG20", docQty: 20000, docType: "DOC Broiler Ross 308", age: 7 },
-            // ── 5 plan CONTOH dari Excel "SIMULASI IBOCS v2.xlsx" (sheet Layout IBOCS, baris 1–5) untuk review angka perhitungan.
-            // Memakai tabel 'STD SAP' asli (std_sap_data.js) supaya hasilnya bisa dibandingkan langsung dengan Excel.
-            ...[
-                { no: "1000001", desc: "JG01-Silvy 1 S.1 (Update KHK, Panen Setelah Share, Seting Pakan)", manual: "2026-05-06" },
-                { no: "1000002", desc: "JG02-Jeane 1 S.1 (Update KHK, Panen Setelah Share, Tanpa Seting Pakan)", manual: "2026-05-06" },
-                { no: "1000003", desc: "JG03-Anto 1 S.1 (Update KHK, Panen Sebelum/Pas Share, Seting Pakan)", sap: "2026-05-03" },
-                { no: "1000004", desc: "JG01-Silvy 1 S.2 (Update KHK, Panen Sebelum/Pas Share, Tanpa Seting Pakan)", sap: "2026-05-03" },
-                { no: "1000005", desc: "JG02-Jeane 1 S.2 (Update KHK, Tanpa Panen, Seting Pakan)" },
-            ].map((r, i) => ({
-                planNo: r.no, fcStatus: "Draft", status: "Active", company: "PT TOP Distribusi", location: "Contoh Excel",
-                id: `EXL-0${i + 1}`, wh: `EXL-0${i + 1}`, namaPlasma: r.desc, docQty: 17200, docType: "DOC Broiler", useStdSap: true,
-                tanggalCI: "30-Mar-26", lastPostingDate: "5-May-26", ageLastPosting: 36,
-                ageCurrent: Math.round((Date.now() - new Date(2026, 2, 30).getTime()) / 864e5), // Excel: Age Now = TODAY - Tanggal CI
-                // U/V (Date/Ekor manual) untuk plan 1-2; W/X (Date SAP/Ekor SAP dari Dokumen Harvest SAP B1) untuk plan 3-4
-                tanggalPanen: r.manual || undefined, ekorPanen: r.manual ? 8219 : undefined,
-                sapData: { mort: 716, bw: 2.016, fcr: 1.5486101581202447, pakanTerpakai: 52000, grpo: 55000, poItr: 2000, lastStok: 5000, targetBW: 2.2, tanggalHarvestSap: r.sap, ekorHarvestSap: r.sap ? 8219 : undefined }
-            })),
-        ];
-
-        // Dummy: Nama Plasma (Plan Description SAP) & Warehouse Name — di real app dari SAP
-        const _DUMMY_PLASMA = ["Budi Santoso", "Siti Rahayu", "Agus Wijaya", "Hendra Pratama", "Dewi Lestari", "Slamet Riyadi", "Yulianto", "Eko Prasetyo"];
-        _sapPlansPool.forEach((p, i) => {
-            if (!p.namaPlasma) p.namaPlasma = `Plasma ${_DUMMY_PLASMA[i % _DUMMY_PLASMA.length]}`;
-            if (!p.whName) p.whName = `Gudang ${p.location ?? p.farm} ${p.id}`;
-        });
-
-        const HARVEST_DAY = 35;
-
-        // ─── KALKULASI ────────────────────────────────────────────────────────────
-        function calcFeedNeed(plan) {
-            const { docQty } = plan;
-            const age = plan.ageCurrent ?? plan.age;
-            const phaseResults = PHASES.map((ph, idx) => {
-                const startDay = Math.max(ph.dayFrom, age + 1);
-                const endDay = Math.min(ph.dayTo, HARVEST_DAY);
-                if (startDay > endDay) return { phaseIdx: idx, qty: 0, avgVitality: null, avgFeedCons: null, days: 0, skipped: true };
-
-                let totalQty = 0, sumV = 0, sumFc = 0, count = 0;
-                for (let d = startDay; d <= endDay; d++) {
-                    const row = STD[d - 1];
-                    totalQty += docQty * (row.v / 100) * row.fd;
-                    sumV += row.v;
-                    sumFc += row.fd;
-                    count++;
-                }
-                return { phaseIdx: idx, qty: totalQty, avgVitality: sumV / count, avgFeedCons: sumFc / count, days: count, skipped: false };
-            });
-            const totalQty = phaseResults.reduce((s, r) => s + r.qty, 0);
-            return { phaseResults, totalQty };
-        }
-
-        function fmt(n, dec = 0) { return n.toLocaleString("id-ID", { minimumFractionDigits: dec, maximumFractionDigits: dec }); }
-
-        // "Nama Plasma" = Plan Description di SAP (TOP, AYM, dst.)
-        function getPlanDescription(plan) {
-            if (!plan) return "-";
-            if (plan.namaPlasma) return plan.namaPlasma;
-            if (plan.planDesc || plan.planDescription) return plan.planDesc || plan.planDescription;
-            return [plan.location ?? plan.farm, plan.id].filter(Boolean).join(" / ") || "-";
-        }
-
-        // "Nama Unit" = unit/lokasi plan di SAP (sebelumnya label "Location")
-        function getNamaUnit(plan) { return plan.location ?? plan.farm ?? "-"; }
-
-        // Warehouse Name (bukan kode)
-        function getWhName(plan) { return plan.whName || `Gudang ${getNamaUnit(plan)}`; }
-
-        // Mortality Actual = Mort / (Populasi + Bonus)
-        function getMortActual(plan) {
-            const sap = sapMock(plan, calcFeedNeed(plan));
-            const pct = sap.formula.popBonus > 0 ? sap.mort / sap.formula.popBonus * 100 : 0;
-            return { ekor: sap.mort, pct };
-        }
-
-        function escHtml(value) {
-            return String(value ?? "").replace(/[&<>"']/g, ch => ({
-                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-            }[ch]));
-        }
-
-        function tip(valueHtml, lines) {
-            return `<span class="formula-tip" data-tip="${escHtml(lines.join("\n"))}">${valueHtml}</span>`;
-        }
-
-        function fmtDate(date) {
-            return date.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
-        }
-
-        function parsePlanDate(value) {
-            if (!value) return null;
-            const iso = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/); // yyyy-mm-dd dari input date (hindari geser zona waktu)
-            if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
-            const parsed = new Date(value);
-            if (!Number.isNaN(parsed.getTime())) return parsed;
-
-            const match = String(value).match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
-            if (!match) return null;
-            const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
-            const month = months[match[2]];
-            if (month === undefined) return null;
-            const year = match[3].length === 2 ? 2000 + parseInt(match[3], 10) : parseInt(match[3], 10);
-            return new Date(year, month, parseInt(match[1], 10));
-        }
-
-        function addDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() + days);
-            return result;
-        }
-
-        // Diff pada Excel (kolom AC / AY) = Date - TODAY
-        function daysFromToday(date) {
-            const t = new Date();
-            return diffDays(new Date(t.getFullYear(), t.getMonth(), t.getDate()), date);
-        }
-
-        function diffDays(fromDate, toDate) {
-            const msPerDay = 24 * 60 * 60 * 1000;
-            return Math.round((toDate - fromDate) / msPerDay);
-        }
-
-        function ceilTo(n, step = 50) {
-            return Math.ceil(n / step) * step;
-        }
-
-        // Plan contoh dari Excel memakai tabel 'STD SAP' asli (std_sap_data.js); plan lain tetap memakai STD ringkas di atas.
-        let _useStdSap = false;
-        let _stdSapRows = null;
-
-        function getStdRows() {
-            if (_useStdSap && typeof STD_SAP !== "undefined") {
-                if (!_stdSapRows) _stdSapRows = STD_SAP.age.map((a, i) => ({ age: a, bw: STD_SAP.bw[i], fiCum: STD_SAP.fi[i] }));
-                return _stdSapRows;
-            }
-            let cumFi = 0;
-            return STD.map(row => {
-                cumFi += row.fd || 0;
-                return {
-                    age: row.d,
-                    bw: row.bw ?? (0.045 + row.d * 0.055),
-                    fiCum: row.fiCum ?? cumFi
-                };
-            });
-        }
-
-        function lookupStdByTargetBW(targetBW) {
-            const rows = getStdRows();
-            return rows.find(row => row.bw >= targetBW) || rows[rows.length - 1];
-        }
-
-        function lookupStdByCumFi(cumFi, matchMode = 1) {
-            const rows = getStdRows();
-            if (matchMode === -1) {
-                let found = rows[0];
-                rows.forEach(row => { if (row.fiCum <= cumFi) found = row; });
-                return found;
-            }
-            return rows.find(row => row.fiCum >= cumFi) || rows[rows.length - 1];
-        }
-
-        function lookupCumFiByAge(age) {
-            const rows = getStdRows();
-            const maxAge = _useStdSap ? rows[rows.length - 1].age : HARVEST_DAY;
-            const safeAge = Math.max(_useStdSap ? 0 : 1, Math.min(maxAge, Math.round(age)));
-            return (rows.find(row => row.age === safeAge) || rows[rows.length - 1]).fiCum;
-        }
-
         // ─── FILTER STATE ─────────────────────────────────────────────────────────
         let _activeCompany = "ALL"; // set dari URL param
 
@@ -1241,7 +953,7 @@
                     <div style="text-align:center;padding:60px 24px;border:2px dashed #e0e7ef;border-radius:12px;background:#fafbfe;">
                         <i class="bi bi-inbox" style="font-size:40px;color:#c7d2fe;display:block;margin-bottom:16px;"></i>
                         <div style="font-size:16px;font-weight:700;color:#1a237e;margin-bottom:8px;">Tidak Ada Plan</div>
-                        <div style="font-size:13px;color:#6b7280;">Tidak ada plan yang sesuai dengan filter Nama Unit / Kandang.</div>
+                        <div style="font-size:13px;color:#6b7280;">Tidak ada plan yang sesuai dengan filter Nama Unit / Warehouse.</div>
                     </div>`;
                 return;
             }
@@ -1296,7 +1008,7 @@
                             <th rowspan="2" class="sticky-col sticky-plan">No Plan</th>
                             <th rowspan="2" class="sticky-col sticky-desc">Nama Plasma</th>
                             <th rowspan="2" class="sticky-col sticky-location">Nama Unit</th>
-                            <th rowspan="2" class="sticky-col sticky-kandang">Kandang</th>
+                            <th rowspan="2" class="sticky-col sticky-kandang">Warehouse</th>
                             ${row1}
                             <th rowspan="2" style="min-width:80px;">Aksi</th>
                         </tr>
@@ -1325,7 +1037,7 @@
                         <td class="sticky-col sticky-plan" style="font-weight:700;color:#1a237e;white-space:nowrap;">${plan.planNo}</td>
                         <td class="sticky-col sticky-desc" style="font-weight:600;color:#374151;">${escHtml(getPlanDescription(plan))}</td>
                         <td class="sticky-col sticky-location" style="white-space:nowrap;">${escHtml(getNamaUnit(plan))}</td>
-                        <td class="sticky-col sticky-kandang">${plan.id}</td>
+                        <td class="sticky-col sticky-kandang" style="white-space:normal;">${escHtml(getWhName(plan))}</td>
                         ${COLS.map(c => `<td class="${c.yellow ? "td-yellow" : ""}">${c.c(plan, sap)}</td>`).join("")}
                         <td style="white-space:nowrap;">
                             <button class="btn-info-plan me-1" onclick="openPlanInfo('${plan.planNo}')"><i class="bi bi-info-circle"></i></button>
@@ -1393,105 +1105,6 @@
             });
         }
 
-        function sapMock(plan, calc) {
-            _useStdSap = !!plan.useStdSap;
-            const sd = plan.sapData || {};
-            const ageLastPosting = plan.ageLastPosting ?? plan.age ?? plan.ageCurrent ?? 0;
-            const lastPostingDate = parsePlanDate(plan.lastPostingDate) || new Date(2026, 3, 20);
-            const tanggalCI = parsePlanDate(plan.tanggalCI) || addDays(lastPostingDate, -ageLastPosting);
-            const ageNow = plan.ageCurrent ?? plan.age ?? diffDays(tanggalCI, new Date());
-            const popBonus = sd.popBonus ?? plan.popBonus ?? (plan.docQty * 1.01);
-            const mort = sd.mort ?? Math.round(plan.docQty * 0.003 * ageLastPosting);
-            const lastPop = sd.lastPop ?? Math.max(0, Math.round(popBonus - mort));
-            const bw = sd.bw ?? (0.045 + ageLastPosting * 0.055).toFixed(3);
-            const fcr = sd.fcr ?? null;
-            const fiAct = sd.fiAct ?? +(sd.pakanTerpakai ? sd.pakanTerpakai / Math.max(popBonus, 1) : (0.045 + ageLastPosting * 0.055)).toFixed(3);
-            const pakanTerpakai = sd.pakanTerpakai
-                ?? (fcr != null && bw != null ? fcr * lastPop * parseFloat(bw) : fiAct * popBonus);
-            const targetBW = sd.targetBW ?? plan.targetBW ?? 1.8;
-            const targetStd = lookupStdByTargetBW(targetBW);
-            const fiCum = targetStd.fiCum;
-            const grpo = sd.grpo ?? Math.ceil(pakanTerpakai / 1000);
-            const poItr = sd.poItr !== undefined ? sd.poItr : Math.max(0, grpo + 2);
-            const poItrCalc = poItr ?? 0;
-            const lastStok = sd.lastStok !== undefined ? sd.lastStok : Math.max(0, (grpo + poItrCalc) - pakanTerpakai);
-            const kebutuhanMinggu = ceilTo(popBonus * fiCum, 50);
-            const sisaKebutuhanRaw = kebutuhanMinggu - (grpo + poItrCalc);
-            const sisaKebutuhan = Math.max(0, sisaKebutuhanRaw);
-
-            // Panen Parsial = input manual user (Excel kolom U/V). Kosong → tidak ada panen parsial:
-            // usia sampai panen = age last posting, ekor = 0. Tanggal <= last posting tidak menggeser usia.
-            // U/V = input manual user; W/X = otomatis dari Dokumen Harvest SAP B1 (kosong bila belum ada dokumen).
-            //   Z  = IF(OR(MAX(U,W) < LastPosting, keduanya kosong), Age LastPosting, MAX(U,W) - CI)
-            //   Y  = Last Populasi - V - X
-            //   AD = IF(OR(U = "", U <= LastPosting), FI Act, ...)   → hanya tanggal manual (U) yang dipakai, sesuai Excel
-            const manualDate = parsePlanDate(plan.tanggalPanen);
-            const manualEkor = Math.max(0, parseFloat(plan.ekorPanen) || 0);
-            const sapDate = parsePlanDate(sd.tanggalHarvestSap);
-            const sapEkor = Math.max(0, parseFloat(sd.ekorHarvestSap) || 0);
-            const panenDate = [manualDate, sapDate].filter(Boolean).sort((a, b) => b - a)[0] || null; // MAX(U,W)
-            const usiaAkhir = panenDate && panenDate >= lastPostingDate
-                ? Math.max(ageLastPosting, diffDays(tanggalCI, panenDate))
-                : ageLastPosting;
-            const panenEkor = manualEkor + sapEkor;
-            const stockAkhir = Math.max(0, lastPop - panenEkor);
-            // Excel AD: tanpa panen parsial (atau tanggal <= last posting) FI Cum sampai panen = FI Act
-            const hasParsial = !!manualDate && manualDate > lastPostingDate;
-            const ageFiAct = lookupStdByCumFi(fiAct, 1).age;
-            const cumFiSampaiPanen = hasParsial ? lookupCumFiByAge(ageFiAct + usiaAkhir - ageLastPosting) : fiAct;
-            const pakanPakaiSampaiPanen = stockAkhir > 0
-                ? Math.min(ceilTo(stockAkhir * Math.max(0, cumFiSampaiPanen - fiAct), 50), lastStok)
-                : 0;
-            const cumFiSisaPakan = stockAkhir > 0 ? +((lastStok - pakanPakaiSampaiPanen) / stockAkhir).toFixed(3) : 0;
-            const cumFiStdTotal = +(cumFiSampaiPanen + Math.max(0, cumFiSisaPakan)).toFixed(3);
-            const usiaCumFiStd1 = lookupStdByCumFi(cumFiStdTotal, 1).age;
-            const usiaCumFiStd2 = lookupStdByCumFi(cumFiSampaiPanen, 1).age;
-            const ageHabis = cumFiStdTotal <= cumFiSampaiPanen
-                ? usiaAkhir
-                : usiaCumFiStd1 - usiaCumFiStd2 + usiaAkhir;
-            const tglHabis = addDays(tanggalCI, ageHabis);
-            const pakanHabisDiff = daysFromToday(tglHabis);
-
-            // Estimasi habis setelah order (Excel: AZ..AX). Belum ada order di tabel → sama dengan pakan habis.
-            const forecastQty = sd.orderTotal ?? plan.orderTotal ?? 0;
-            const lastStokAfterForecast = lastStok + forecastQty;
-            const dailyFeedAfterCurrent = 0;
-            const extraDaysFromForecast = 0;
-            const ageEstimasiHabis = ageHabis;
-            const tglEstimasiHabis = addDays(tanggalCI, ageEstimasiHabis);
-            const estimasiHabisDiff = daysFromToday(tglEstimasiHabis);
-            const targetBWNum = parseFloat(targetBW) || 0;
-
-            // FI Cum Pakan Terima menurut Excel (kolom O) = (GRPO/IT + PO/ITR) / Populasi
-            const fiCumTerima = +((grpo + poItrCalc) / popBonus).toFixed(3);
-            // Diff FCR (Excel M) = FCR - FCR STD SAP pada BW yang sama; hanya tersedia bila tabel STD SAP dipakai
-            let diffFcr = null;
-            if (plan.useStdSap && fcr != null && typeof STD_SAP !== "undefined") {
-                const idx = STD_SAP.bw.findIndex(v => Math.abs(v - parseFloat(bw)) < 0.0005);
-                if (idx >= 0) diffFcr = fcr - STD_SAP.fcr[idx];
-            }
-            const result = {
-                mort, lastPop, bw, fcr, diffFcr, fiAct, fiCum, fiCumTerima, gi: pakanTerpakai,
-                panenManual: { dateStr: manualDate ? fmtDate(manualDate) : "", ekor: manualEkor }, grpo, poItr, ageNow, useStdSap: !!plan.useStdSap,
-                lastStok, kebutuhanMinggu, sisaKebutuhan,
-                hariHabis: pakanHabisDiff, tglHabisStr: fmtDate(tglHabis), ageHabis,
-                panenDateStr: panenDate ? fmtDate(panenDate) : "-", panenEkor, pakanHabisDiff,
-                harvestSap: { dateStr: sapDate ? fmtDate(sapDate) : "", ekor: sapEkor, has: !!(sapDate || sapEkor) },
-                tglEstimasiHabisStr: fmtDate(tglEstimasiHabis), ageEstimasiHabis, estimasiHabisDiff,
-                lastPostStr: plan.lastPostingDate || fmtDate(lastPostingDate),
-                statusKalang: "Released", pakanHabis: fmtDate(tglHabis), bwPanen: `${targetBWNum.toFixed(2)} kg`,
-                formula: {
-                    ageLastPosting, ageNow, popBonus, pakanTerpakai, targetBW: targetBWNum, poItrCalc, sisaKebutuhanRaw,
-                    stockAkhir, panenDateStr: panenDate ? fmtDate(panenDate) : "-", forecastQty, lastStokAfterForecast,
-                    dailyFeedAfterCurrent, extraDaysFromForecast,
-                    pakanPakaiSampaiPanen, cumFiSampaiPanen, cumFiStdTotal, usiaCumFiStd2, usiaCumFiStd1, cumFiSisaPakan, usiaAkhir
-                },
-                tanggalCI, tanggalCIStr: fmtDate(tanggalCI)
-            };
-            _useStdSap = false;
-            return result;
-        }
-
         // ─── SUMMARY ──────────────────────────────────────────────────────────────
         function renderSummary() {
             const shown = getVisiblePlans();
@@ -1538,8 +1151,10 @@
             return _reviewData[planNo].orders.filter(r => r.itemCode || r.qty > 0);
         }
 
+        const RIT_OPTIONS = ["Rit 1", "Rit 2", "Rit 3", "Rit 4", "Rit 5"];
+
         function newOrderRow(extra) {
-            return Object.assign({ id: ++_rowSeq, itemCode: "", itemName: "", qty: 0, uom: "Kg" }, extra || {});
+            return Object.assign({ id: ++_rowSeq, itemCode: "", itemName: "", rit: "Rit 1", qty: 0, uom: "Kg" }, extra || {});
         }
 
         function headerSync(planNo, field, value) {
@@ -1631,8 +1246,9 @@
             return `
                 ${wzCard("bi-person-vcard", "Identitas Plan",
                     wzField("Nama Plasma", escHtml(getPlanDescription(plan))) +
+                    wzField("Item DOC", escHtml(plan.docItem || plan.docType || "-")) +
                     wzField("Tanggal CI", sap.tanggalCIStr) +
-                    wzField("Populasi", fmt(f.popBonus), "ekor"), { cols: "c3w" })}
+                    wzField("Populasi", fmt(f.popBonus), "ekor"), { cols: "c4w" })}
 
                 <div class="wz-kpis">
                     ${wzKpi("bi-box-seam", "Last Stok", `${fmt(sap.lastStok)} <small>kg</small>`, "Kolom S", "blue")}
@@ -1688,8 +1304,7 @@
             const isLast = _reviewStep === total - 1 && !isInfo;
 
             document.getElementById("reviewModalTitle").innerHTML =
-                `<i class="bi bi-clipboard2-check me-2"></i>Forecast — Plan ${_reviewStep + 1} / ${total} · ${plan.planNo} · ${getNamaUnit(plan)} / ${plan.id}
-                <span class="badge bg-light text-primary ms-2">${getSelectedPeriod()}</span>`;
+                `<i class="bi bi-clipboard2-check me-2"></i>Forecast — Plan ${_reviewStep + 1} / ${total} · ${plan.planNo} · ${getNamaUnit(plan)} / ${getWhName(plan)}`;
 
             const guardHtml = !guard.ok
                 ? `<div class="alert alert-warning mx-3 mt-3 mb-0 py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>${guard.reason} — Plan ini akan dilewati saat disimpan.</div>`
@@ -1750,35 +1365,15 @@
             const inp = `class="form-control form-control-sm"`;
             return `<div class="table-responsive"><table class="table table-sm align-middle mb-0" style="font-size:12px;min-width:520px;">
                 <thead class="table-light"><tr><th style="width:30px;">#</th><th>Item Pakan</th>
-                <th style="width:140px;" class="text-end">Jumlah (Kg)</th><th style="width:36px;"></th></tr></thead>
+                <th style="width:110px;">Rit</th><th style="width:140px;" class="text-end">Jumlah (Kg)</th><th style="width:36px;"></th></tr></thead>
                 <tbody>${orders.map((r, idx) => `<tr>
                     <td class="fw-bold text-muted">${idx + 1}</td>
                     <td><button class="btn btn-sm btn-outline-secondary w-100 text-start" style="font-size:12px;" onclick="openItemSearchReview('${planNo}',${r.id})">
                         ${r.itemCode ? `<span class="fw-bold">${escHtml(r.itemName)}</span> <span class="text-muted">· ${escHtml(r.itemCode)}</span>` : `<i class="bi bi-search me-1"></i>Pilih item pakan`}</button></td>
+                    <td><select class="form-select form-select-sm" onchange="orderSync('${planNo}',${r.id},'rit',this.value)">${RIT_OPTIONS.map(o => `<option ${o === (r.rit || "Rit 1") ? "selected" : ""}>${o}</option>`).join("")}</select></td>
                     <td><input type="number" min="0" ${inp} style="text-align:right;" value="${r.qty || ""}" oninput="orderSync('${planNo}',${r.id},'qty',this.value)"></td>
                     <td><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="orderRemoveRow('${planNo}',${r.id})"><i class="bi bi-trash"></i></button></td>
                 </tr>`).join("")}</tbody></table></div>`;
-        }
-
-        // Estimasi habis setelah order — sama dengan kolom AZ..AX pada Excel
-        function calcEstimateAfterOrder(sap, orderTotal) {
-            _useStdSap = !!sap.useStdSap;
-            try { return calcEstimateCore(sap, orderTotal); } finally { _useStdSap = false; }
-        }
-
-        function calcEstimateCore(sap, orderTotal) {
-            const f = sap.formula;
-            const sisaPakan = sap.lastStok + orderTotal - f.pakanPakaiSampaiPanen;      // AZ
-            const fiCumSisa = f.stockAkhir > 0 ? +(sisaPakan / f.stockAkhir).toFixed(3) : 0; // BA
-            const fiCumTotal = +(fiCumSisa + f.cumFiSampaiPanen).toFixed(3);            // BB
-            const usiaTotal = lookupStdByCumFi(fiCumTotal, 1).age;                      // BC
-            const age = fiCumTotal <= f.cumFiStdTotal ? sap.ageHabis : usiaTotal + sap.ageHabis - f.usiaCumFiStd2; // AX
-            const date = addDays(sap.tanggalCI, age);                                    // AW
-            return {
-                date, age, diff: daysFromToday(date),                                    // AW, AX, AY (Diff = Date - Hari Ini)
-                sisaPakan, fiCumSisa, fiCumTotal, usiaTotal,                             // AZ, BA, BB, BC
-                addDays: age - sap.ageHabis, stokAfter: sap.lastStok + orderTotal
-            };
         }
 
         function estimateHtml(sap, total, compact) {
@@ -1873,15 +1468,17 @@
                 const itemRows = shown.length ? shown.map((r, i) => `<tr>
                         <td class="text-muted">${i + 1}</td>
                         <td>${r.itemCode ? `<b>${escHtml(r.itemName)}</b><div class="text-muted" style="font-size:10.5px;">${escHtml(r.itemCode)}</div>` : `<span class="text-danger">belum dipilih</span>`}</td>
+                        <td>${escHtml(r.rit || "Rit 1")}</td>
+                        <td>${escHtml(getWhName(plan))}</td>
                         <td class="text-end fw-bold">${fmt(parseFloat(r.qty) || 0)} <small class="text-muted fw-normal">${r.uom}</small></td></tr>`).join("")
-                    : `<tr><td colspan="3" class="text-center text-muted py-3">Belum ada item order</td></tr>`;
+                    : `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada item order</td></tr>`;
                 const cell = (l, v, c) => `<div class="wz-f"><div class="k">${l}</div><div class="v" ${c ? `style="color:${c}"` : ""}>${v}</div></div>`;
                 return `<div class="sum-card ${skip ? "is-skip" : ""} ${open ? "open" : ""}">
                     <div class="sum-head" onclick="toggleSumCard(this)">
                         <div class="sum-ava"><i class="bi bi-house-door"></i></div>
                         <div class="flex-grow-1" style="min-width:0;">
                             <div class="sum-title">${escHtml(getPlanDescription(plan))}</div>
-                            <div class="sum-sub">${escHtml(plan.company)} · ${plan.planNo} · ${escHtml(getNamaUnit(plan))} / ${plan.id}</div>
+                            <div class="sum-sub">${escHtml(plan.company)} · ${plan.planNo} · ${escHtml(getNamaUnit(plan))} / ${escHtml(getWhName(plan))}</div>
                             <div class="sum-chips mt-2 mb-0">
                                 <span class="sum-chip"><i class="bi bi-calendar-event"></i><small>Tanggal Order</small><b>${hd.orderDate || "-"}</b></span>
                                 <span class="sum-chip"><i class="bi bi-geo-alt"></i><small>Lokasi Pengambilan</small><b>${hd.pickupLocation || "-"}</b></span>
@@ -1898,9 +1495,9 @@
                         <div class="sum-col">
                             <div class="sum-col-h"><i class="bi bi-file-earmark-text"></i>Dokumen Order</div>
                             <table class="table table-sm align-middle mb-0 sum-table">
-                                <thead><tr><th style="width:28px;">#</th><th>Item Pakan</th><th class="text-end">Jumlah</th></tr></thead>
+                                <thead><tr><th style="width:28px;">#</th><th>Item Pakan</th><th>Rit</th><th>Warehouse Name</th><th class="text-end">Jumlah</th></tr></thead>
                                 <tbody>${itemRows}</tbody>
-                                <tfoot><tr><td colspan="2" class="text-end">Total Order</td><td class="text-end">${fmt(total)} kg</td></tr></tfoot>
+                                <tfoot><tr><td colspan="4" class="text-end">Total Order</td><td class="text-end">${fmt(total)} kg</td></tr></tfoot>
                             </table>
                         </div>
                     </div>
@@ -1922,7 +1519,7 @@
                 <div class="p-3">
                     <div class="sum-hero">
                         <div class="sum-stat"><i class="bi bi-files"></i><div><div class="k">Forecast</div><div class="v">${willCreate}</div></div></div>
-                        <div class="sum-stat"><i class="bi bi-calendar-range"></i><div><div class="k">Periode</div><div class="v sm">${period}</div></div></div>
+                        <div class="sum-stat"><i class="bi bi-calendar-event"></i><div><div class="k">Tanggal Dokumen</div><div class="v sm">${fmtDate(new Date())}</div></div></div>
                         <div class="sum-stat"><i class="bi bi-box-seam"></i><div><div class="k">Total Order</div><div class="v">${fmt(grandTotal)} <small>kg</small></div></div></div>
                     </div>
                     ${_reviewPlans.length > 1 ? `<div class="d-flex justify-content-end gap-2 mb-2">
@@ -1934,10 +1531,8 @@
             document.getElementById("reviewModalFooter").innerHTML = `
                 <button class="btn btn-outline-secondary btn-sm fw-bold" onclick="reviewBackToLast()"><i class="bi bi-arrow-left me-1"></i>Edit Order</button>
                 <div class="ms-auto d-flex gap-2">
-                    <button class="btn btn-outline-primary btn-sm fw-bold px-3" onclick="submitReviewForecast('Draft')" ${willCreate === 0 ? "disabled" : ""}>
-                        <i class="bi bi-floppy me-1"></i>Save as Draft</button>
-                    <button class="btn btn-primary btn-sm fw-bold px-4" onclick="submitReviewForecast('Forecast Created')" ${willCreate === 0 ? "disabled" : ""}>
-                        <i class="bi bi-send me-1"></i>Submit Forecast</button>
+                    <button class="btn btn-primary btn-sm fw-bold px-4" onclick="submitReviewForecast('Draft')" ${willCreate === 0 ? "disabled" : ""}>
+                        <i class="bi bi-send me-1"></i>Buat Forecast</button>
                 </div>`;
         }
 
@@ -1948,7 +1543,7 @@
             const history = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]");
 
             // Submit wajib lengkap; Draft boleh belum lengkap
-            if (status !== "Draft") {
+            { // Buat Forecast: data order wajib lengkap
                 for (let i = 0; i < _reviewPlans.length; i++) {
                     const planNo = _reviewPlans[i];
                     const data = _reviewData[planNo];
@@ -1970,24 +1565,26 @@
                 const totalQty = orderTotalOf(planNo);
                 const est = calcEstimateAfterOrder(sap, totalQty);
                 const lines = activeOrders(planNo).map(r => ({
-                    itemCode: r.itemCode, itemName: r.itemName, flag: "Manual",
+                    itemCode: r.itemCode, itemName: r.itemName, rit: r.rit || "Rit 1", flag: "Manual",
                     standardNeed: r.qty, currentStock: 0, recommendedQty: r.qty,
                     manualAdjustment: 0, uom: r.uom || "Kg"
                 }));
                 const existingIdx = _editingFcNo ? history.findIndex(h => h.fcNo === _editingFcNo && h.planNo === planNo) : -1;
                 const fcNo = existingIdx >= 0 ? history[existingIdx].fcNo : "FC-" + new Date().getFullYear() + "-" + String(history.length + count + 1).padStart(3, '0');
                 const record = {
-                    fcNo, fcDate: todayISO(), period, periodFrom: _periodRange.from, periodTo: _periodRange.to,
+                    fcNo, fcDate: todayISO(),
                     // Header dokumen → header PO & SO di SAP Business One
                     orderDate: data.header.orderDate, pickupLocation: data.header.pickupLocation,
-                    planNo: plan.planNo, planName: `${getNamaUnit(plan)} / ${plan.id}`,
+                    planNo: plan.planNo, planName: `${getNamaUnit(plan)} / ${getWhName(plan)}`,
                     planDesc: getPlanDescription(plan), namaPlasma: getPlanDescription(plan),
                     company: plan.company, farm: getNamaUnit(plan), warehouse: plan.wh, warehouseName: getWhName(plan), kdgId: plan.id,
-                    status, docType: plan.docType, age: String(plan.ageCurrent ?? plan.age), rawAge: plan.ageCurrent ?? plan.age,
+                    status, docType: plan.docType, itemDoc: plan.docItem || plan.docType, age: String(plan.ageCurrent ?? plan.age), rawAge: plan.ageCurrent ?? plan.age,
                     docCodeMale: "-", docCodeFemale: "-", docNameMale: "-", docNameFemale: "-",
                     initialStock: plan.docQty, currentPop: plan.docQty, totalPop: plan.docQty,
                     totalQty, lines,
                     panenParsial: { date: data.panen.date || "", ekor: data.panen.ekor || 0 },
+                    // Foto informasi plan saat forecast dibuat → ditampilkan apa adanya di Forecast View
+                    snapshot: buildPlanSnapshot(plan, sap),
                     estimasiHabis: {
                         date: fmtDate(est.date), age: est.age, diff: est.diff, addDays: est.addDays,
                         totalPakanSisa: est.sisaPakan, fiCumSisaPakan: est.fiCumSisa, fiCumTotal: est.fiCumTotal, usiaFiCumTotal: est.usiaTotal
@@ -2000,7 +1597,7 @@
             });
             localStorage.setItem("IBOCS_fc_list", JSON.stringify(history));
             _reviewModalInst.hide();
-            showToast(`${count} Forecast (${period}) berhasil ${status === 'Draft' ? 'disimpan sebagai Draft' : 'disubmit'}. <a href="customer_ForecastList.html" style="color:#166534;font-weight:700;">Lihat List →</a>`, "success");
+            showToast(`${count} Forecast berhasil dibuat dengan status Draft. <a href="customer_ForecastList.html" style="color:#166534;font-weight:700;">Lihat List →</a>`, "success");
             _selectedPlansForBulk = [];
             _editingFcNo = null;
             renderPlanCards();
@@ -2046,14 +1643,14 @@
                         <div class="pi-item"><div class="pik">Plan No</div><div class="piv">${plan.planNo}</div></div>
                         <div class="pi-item"><div class="pik">Nama Plasma</div><div class="piv">${getPlanDescription(plan)}</div></div>
                         <div class="pi-item"><div class="pik">Company</div><div class="piv">${plan.company}</div></div>
-                        <div class="pi-item"><div class="pik">Kandang</div><div class="piv">${plan.id}</div></div>
+                        
                         <div class="pi-item"><div class="pik">Warehouse</div><div class="piv">${escHtml(getWhName(plan))}</div></div>
                     </div>
                 </div>
                 <div class="pi-section">
                     <div class="pi-section-title">DOC & Populasi</div>
                     <div class="pi-grid">
-                        <div class="pi-item"><div class="pik">Item DOC</div><div class="piv">${plan.docType}</div></div>
+                        <div class="pi-item"><div class="pik">Item DOC</div><div class="piv">${escHtml(plan.docItem || plan.docType || "-")}</div></div>
                         <div class="pi-item"><div class="pik">DOC Awal</div><div class="piv num">${fmt(plan.docQty)} ekor</div></div>
                         <div class="pi-item"><div class="pik">Umur Saat Ini</div><div class="piv num" style="color:#92400e;">${age}</div></div>
                         <div class="pi-item"><div class="pik">Sisa Hari</div><div class="piv num" style="color:#dc2626;">${sisaHari}</div></div>
@@ -2108,7 +1705,7 @@
             const companies = [...new Set(DEMO_PLANS.map(p => p.company))];
             const base = DEMO_PLANS.filter(p => !_filterCompany || p.company === _filterCompany);
             const locations = [...new Set(base.map(p => p.location ?? p.farm))].sort();
-            const kandangs = [...new Set(base.filter(p => !_filterLocation || (p.location ?? p.farm) === _filterLocation).map(p => p.id))].sort();
+            const kandangs = base.filter(p => !_filterLocation || (p.location ?? p.farm) === _filterLocation).map(p => ({ id: p.id, name: getWhName(p) })).sort((a, b) => a.name.localeCompare(b.name));
             const opt = (v, cur) => `<option value="${escHtml(v)}" ${v === cur ? "selected" : ""}>${escHtml(v)}</option>`;
             const lbl = `font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;`;
             document.getElementById("filterContainer").innerHTML = `
@@ -2127,9 +1724,9 @@
                         </select>
                     </div>
                     <div style="min-width:180px;">
-                        <label class="form-label mb-1" style="${lbl}">Kandang</label>
+                        <label class="form-label mb-1" style="${lbl}">Warehouse</label>
                         <select class="form-select form-select-sm" onchange="onFilterChange('kandang', this.value)">
-                            <option value="">Semua Kandang</option>${kandangs.map(k => opt(k, _filterKandang)).join("")}
+                            <option value="">Semua Warehouse</option>${kandangs.map(k => `<option value="${escHtml(k.id)}" ${k.id === _filterKandang ? "selected" : ""}>${escHtml(k.name)}</option>`).join("")}
                         </select>
                     </div>
                     <div class="ms-auto small text-muted align-self-end">${getVisiblePlans().length} plan ditampilkan</div>
@@ -2189,11 +1786,15 @@
             return forPlan[forPlan.length - 1];
         }
 
-        function canSubmitForecast(planNo, period, ignoreFcNo) {
+        // Forecast Period hanya alat bantu pencarian (tidak disimpan di dokumen). Plan dianggap sudah punya forecast
+        // bila ada dokumen forecast untuk plan itu yang tanggal dokumennya berada di dalam range yang dipilih.
+        function canSubmitForecast(planNo, _unused, ignoreFcNo) {
             const history = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]");
-            const samePeriod = history.find(f => f.planNo === planNo && (f.period || f.week) === period && f.fcNo !== ignoreFcNo);
-            if (!samePeriod) return { ok: true };
-            return { ok: false, reason: `Forecast ${samePeriod.fcNo} untuk ${planNo} ${period} sudah ada.` };
+            const existing = history.find(f => f.planNo === planNo && f.fcNo !== ignoreFcNo
+                && (!_periodRange.from || !f.fcDate || f.fcDate >= _periodRange.from)
+                && (!_periodRange.to || !f.fcDate || f.fcDate <= _periodRange.to));
+            if (!existing) return { ok: true };
+            return { ok: false, reason: `Forecast ${existing.fcNo} untuk ${planNo} tanggal ${existing.fcDate} sudah ada.` };
         }
 
         // ─── BULK FORECAST ACTION ─────────────────────────────────────────────────
@@ -2234,14 +1835,9 @@
         function resumeDraftFromUrl(fcNo) {
             if (!fcNo) return;
             const history = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]");
-            const fc = history.find(h => h.fcNo === fcNo && (h.status === "Draft" || h.status === "Forecast Created"));
+            const fc = history.find(h => h.fcNo === fcNo && h.status === "Draft");
             const plan = fc && DEMO_PLANS.find(p => p.planNo === fc.planNo);
             if (!plan) { showToast("Forecast tidak ditemukan atau sudah tidak bisa diedit.", "warning"); return; }
-            if (fc.periodFrom && fc.periodTo && _periodPicker) {
-                _periodPicker.setDate([fc.periodFrom, fc.periodTo], true);
-                syncPeriodRange(_periodPicker.selectedDates);
-                renderPlanCards();
-            }
             _editingFcNo = fcNo;
             plan.tanggalPanen = fc.panenParsial?.date || undefined;
             plan.ekorPanen = fc.panenParsial?.ekor || undefined;
@@ -2255,7 +1851,7 @@
                         pickupLocation: PICKUP_LOCATIONS.includes(fc.pickupLocation) ? fc.pickupLocation : PICKUP_LOCATIONS[0]
                     }),
                     orders: (fc.lines || []).map(l => newOrderRow({
-                        itemCode: l.itemCode || "", itemName: l.itemName || "",
+                        itemCode: l.itemCode || "", itemName: l.itemName || "", rit: l.rit || "Rit 1",
                         qty: parseFloat(l.recommendedQty) || 0, uom: l.uom || "Kg"
                     }))
                 }
@@ -2288,7 +1884,7 @@
                 _activeCompany = company;
                 _filterCompany = company;
                 document.querySelector("h1").textContent = `Add Forecast — ${company}`;
-                document.querySelector(".subtext").textContent = `Plan aktif untuk ${company} langsung tampil. Filter Nama Unit / Kandang, centang plan, isi order, lalu simpan sebagai draft atau submit.`;
+                document.querySelector(".subtext").textContent = `Plan aktif untuk ${company} langsung tampil. Filter Nama Unit / Warehouse, centang plan, isi order, lalu simpan sebagai draft atau submit.`;
             }
             initPeriodPicker();
             // Plan langsung dimuat (tanpa tarik manual dari SAP)

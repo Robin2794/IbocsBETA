@@ -33,7 +33,7 @@
         .subtext { margin-top: 6px; font-size: 13px; color: #6b7280; }
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 16px;
         }
@@ -184,12 +184,12 @@
                     <div class="summary-grid" id="summaryGrid"></div>
 
                     <div class="filter-panel">
-                        <input class="form-control form-control-sm" id="searchQ" placeholder="Cari forecast, plan, nama unit..." oninput="renderForecastList()">
-                        <input class="form-control form-control-sm bg-white" id="periodFilter" style="max-width:250px;" readonly placeholder="Range tanggal">
+                        <input class="form-control form-control-sm bg-white" id="periodFilter" style="max-width:250px;" readonly placeholder="Range tanggal dokumen">
+
                         <select class="form-select form-select-sm" id="companyFilter" onchange="renderForecastList()"></select>
                         <select class="form-select form-select-sm" id="pickupFilter" onchange="renderForecastList()"></select>
                         <select class="form-select form-select-sm" id="statusFilter" onchange="renderForecastList()"></select>
-                        <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="resetDateFilter()" title="Tampilkan semua tanggal">Semua Tanggal</button>
+                        <input class="form-control form-control-sm" id="searchQ" style="max-width:260px;" placeholder="Cari di tabel: forecast, plan, plasma, unit..." oninput="renderForecastList()">
                     </div>
 
                     <div id="forecastSections"></div>
@@ -216,16 +216,16 @@
 
         const PICKUP_LOCATIONS = ["SIDOARJO", "SEMARANG", "SRAGEN", "CIREBON", "TULUNGAGUNG", "MAGELANG"];
         const DEMO_FC = [
-            { fcNo: "FC-001", fcDate: "2026-09-28", period: "23-Sep-26 s/d 30-Sep-26", company: "PT TOP Distribusi", farm: "Farm Deli", warehouse: "WH-KDG01", kdgId: "KDG-01", planNo: "PLAN-2026-001", planName: "Farm Deli / KDG-01", namaPlasma: "Plasma Budi Santoso", pickupLocation: "SIDOARJO", status: "Draft", lines: [{ recommendedQty: 7300 }, { recommendedQty: 5200 }] },
-            { fcNo: "FC-002", fcDate: "2026-09-29", period: "23-Sep-26 s/d 30-Sep-26", company: "PT TOP Distribusi", farm: "Farm Deli", warehouse: "WH-KDG02", kdgId: "KDG-02", planNo: "PLAN-2026-002", planName: "Farm Deli / KDG-02", namaPlasma: "Plasma Siti Rahayu", pickupLocation: "SEMARANG", status: "Forecast Created", lines: [{ recommendedQty: 8000 }, { recommendedQty: 7000 }] },
-            { fcNo: "FC-003", fcDate: "2026-09-30", period: "23-Sep-26 s/d 30-Sep-26", company: "PT AYM", farm: "Farm Binjai", warehouse: "WH-KDG03", kdgId: "KDG-03", planNo: "PLAN-2026-003", planName: "Farm Binjai / KDG-03", namaPlasma: "Plasma Agus Wijaya", pickupLocation: "SIDOARJO", status: "PO Created", lines: [{ recommendedQty: 6200 }, { recommendedQty: 4300 }] }
+            { fcNo: "FC-001", fcDate: "2026-09-28", company: "PT TOP Distribusi", farm: "Pekalongan", warehouse: "F0001364", kdgId: "F0001364", planNo: "100004423", planName: "Pekalongan / F0001364", namaPlasma: "Plasma Budi Santoso", orderDate: "2026-09-28", pickupLocation: "SIDOARJO", status: "Draft", lines: [{ itemCode: "FEED-004", itemName: "Pakan Finisher (BR-3)", recommendedQty: 7300, uom: "Kg" }, { itemCode: "FEED-002", itemName: "Pakan Starter (BR-1)", recommendedQty: 5200, uom: "Kg" }] },
+            { fcNo: "FC-002", fcDate: "2026-09-29", company: "PT TOP Distribusi", farm: "Blora", warehouse: "F0001471", kdgId: "F0001471", planNo: "100004424", planName: "Blora / F0001471", namaPlasma: "Plasma Siti Rahayu", orderDate: "2026-09-29", pickupLocation: "SEMARANG", status: "Forecast Created", lines: [{ itemCode: "FEED-004", itemName: "Pakan Finisher (BR-3)", recommendedQty: 8000, uom: "Kg" }, { itemCode: "FEED-003", itemName: "Pakan Grower (BR-2)", recommendedQty: 7000, uom: "Kg" }] },
+            { fcNo: "FC-003", fcDate: "2026-09-30", company: "PT AYM", farm: "Ponorogo", warehouse: "F0000274", kdgId: "F0000274", planNo: "100000271", planName: "Ponorogo / F0000274", namaPlasma: "Plasma Hendra Pratama", orderDate: "2026-09-30", pickupLocation: "SIDOARJO", status: "PO Created", lines: [{ itemCode: "FEED-002", itemName: "Pakan Starter (BR-1)", recommendedQty: 6200, uom: "Kg" }, { itemCode: "FEED-003", itemName: "Pakan Grower (BR-2)", recommendedQty: 4300, uom: "Kg" }] }
         ];
 
         // Filter tanggal = range (default 1 minggu ke belakang s/d hari ini), dicocokkan ke tanggal forecast
         let _dateRange = { from: "", to: "" };
         let _datePicker = null;
         function iso(d) { return flatpickr.formatDate(d, "Y-m-d"); }
-        function resetDateFilter() { _datePicker.clear(); _dateRange = { from: "", to: "" }; renderForecastList(); }
+        
 
         function getFcList() {
             const stored = JSON.parse(localStorage.getItem("IBOCS_fc_list") || "[]").map(fc => ({ ...fc, _stored: true }));
@@ -277,19 +277,17 @@
         function renderSummary(data) {
             const totalQty = data.reduce((sum, fc) => sum + calcTotalQty(fc), 0);
             const draft = data.filter(fc => (fc.status || "Draft") === "Draft").length;
-            const periods = new Set(data.map(fc => fc.company || "-")).size;
             document.getElementById("summaryGrid").innerHTML = `
                 <div class="summary-box"><div class="lbl">Total Forecast</div><div class="val" style="color:#1a237e;">${data.length}</div></div>
                 <div class="summary-box"><div class="lbl">Draft</div><div class="val" style="color:#475569;">${draft}</div></div>
-                <div class="summary-box"><div class="lbl">Total QTY</div><div class="val" style="color:#166534;">${fmt(totalQty)} <span style="font-size:14px;font-weight:400;">kg</span></div></div>
-                <div class="summary-box"><div class="lbl">Company</div><div class="val" style="color:#92400e;">${periods}</div></div>`;
+                <div class="summary-box"><div class="lbl">Total QTY</div><div class="val" style="color:#166534;">${fmt(totalQty)} <span style="font-size:14px;font-weight:400;">kg</span></div></div>`;
         }
 
         const TABLE_HEAD = `
             <table class="table-custom">
                 <thead><tr>
                     <th>No Forecast</th><th>Plan</th><th>Nama Plasma</th>
-                    <th>Periode</th><th>Nama Unit / Kandang</th><th>Lokasi Pengambilan</th>
+                    <th>Tanggal Dokumen</th><th>Nama Unit / Warehouse</th><th>Lokasi Pengambilan</th>
                     <th>Total QTY</th><th>Status</th><th style="width:80px;">Action</th>
                 </tr></thead>
                 <tbody>`;
@@ -302,7 +300,7 @@
             const pickup = document.getElementById("pickupFilter").value || "ALL";
 
             const data = getFcList().filter(fc => {
-                const haystack = [fc.fcNo, fc.planNo, fc.planName, fc.namaPlasma, fc.planDesc, fc.company, fc.farm, fc.kdgId, fc.warehouse].join(" ").toLowerCase();
+                const haystack = [fc.fcNo, fc.planNo, fc.planName, fc.namaPlasma, fc.planDesc, fc.company, fc.farm, fc.kdgId, fc.warehouse, fc.warehouseName].join(" ").toLowerCase();
                 const inRange = (!_dateRange.from || !fc.fcDate || fc.fcDate >= _dateRange.from)
                     && (!_dateRange.to || !fc.fcDate || fc.fcDate <= _dateRange.to);
                 return (!q || haystack.includes(q))
@@ -333,15 +331,15 @@
 
                 const rowsHtml = rows.map(fc => {
                     const st = fc.status || "Draft";
-                    const editBtn = (st === "Draft" || st === "Forecast Created") && fc._stored
+                    const editBtn = st === "Draft" && fc._stored
                         ? `<a class="btn-icon" title="Edit" href="customer_ForecastAdd.html?company=${encodeURIComponent(company)}&fcNo=${encodeURIComponent(fc.fcNo)}"><i class="bi bi-pencil"></i></a>`
                         : "";
                     return `<tr>
                         <td><a class="fc-link" href="customer_ForecastView.html?fcNo=${encodeURIComponent(fc.fcNo)}">${fc.fcNo}</a></td>
                         <td class="fw-bold">${fc.planNo || "-"}</td>
                         <td>${fc.namaPlasma || fc.planDesc || fc.planName || "-"}</td>
-                        <td>${fc.period || fc.week || "-"}</td>
-                        <td>${fc.farm || "-"} / ${fc.kdgId || fc.warehouse || "-"}</td>
+                        <td>${fc.fcDate || "-"}</td>
+                        <td>${fc.farm || "-"} / ${fc.warehouseName || (fc.farm ? "Gudang " + fc.farm : (fc.warehouse || "-"))}</td>
                         <td>${fc.pickupLocation || "-"}</td>
                         <td class="fw-bold text-success">${fmt(calcTotalQty(fc))} kg</td>
                         <td><span class="status-badge ${statusClass(st)}">${st}</span></td>
@@ -361,9 +359,6 @@
                             <span style="font-size:11px;color:#c7d2fe;margin-left:8px;">·</span>
                             <span style="font-size:11px;color:#c7d2fe;margin-left:8px;">${fmt(totalQty)} kg</span>
                         </div>
-                        <button class="btn btn-sm btn-outline-light fw-bold" style="font-size:12px;" onclick="openCompanyPicker()">
-                            <i class="bi bi-plus-lg me-1"></i>Add
-                        </button>
                     </div>
                     <div style="border:1.5px solid #e0e7ef;border-top:none;border-radius:0 0 10px 10px;overflow:hidden;">
                         ${TABLE_HEAD}${rowsHtml}${TABLE_FOOT}

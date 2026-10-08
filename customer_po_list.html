@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="po_feed_helpers.js"></script>
     <script src="sidebar.js"></script>
     <style>
         body { background:#f8fafc; font-family:'Segoe UI', sans-serif; }
@@ -17,7 +20,7 @@
         .summary-card { border:1px solid #e8ecf4; border-radius:10px; padding:14px 16px; background:#fff; }
         .summary-label { font-size:11px; color:#64748b; font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
         .summary-value { margin-top:5px; font-size:24px; font-weight:800; color:#15803d; }
-        .filter-row { display:grid; grid-template-columns:minmax(200px,1.5fr) minmax(140px,.7fr) minmax(140px,.7fr) minmax(140px,.7fr) auto; gap:10px; align-items:end; padding:16px 20px; border-bottom:1px solid #eef2f7; }
+        .filter-row { display:grid; grid-template-columns:minmax(200px,1.5fr) minmax(140px,.7fr) minmax(240px,1fr) auto; gap:10px; align-items:end; padding:16px 20px; border-bottom:1px solid #eef2f7; }
         .filter-row label { display:block; font-size:12px; color:#4b5563; font-weight:700; margin-bottom:5px; }
         table { font-size:13.5px; }
         th { background:#f8faff; color:#374151; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1.5px solid #e0e7ef !important; }
@@ -95,7 +98,7 @@
                     <div class="filter-row">
                         <div>
                             <label>Search</label>
-                            <input type="search" id="fSearch" class="form-control form-control-sm" placeholder="PO No / Forecast Ref / Vendor / Plan No">
+                            <input type="search" id="fSearch" class="form-control form-control-sm" placeholder="PO No / Forecast Ref / Vendor / Plan">
                         </div>
                         <div>
                             <label>Status</label>
@@ -107,12 +110,8 @@
                             </select>
                         </div>
                         <div>
-                            <label>Dari Tanggal</label>
-                            <input type="date" id="fDateFrom" class="form-control form-control-sm">
-                        </div>
-                        <div>
-                            <label>Sampai</label>
-                            <input type="date" id="fDateTo" class="form-control form-control-sm">
+                            <label>Range Tanggal PO</label>
+                            <input type="text" id="dateRange" class="form-control form-control-sm bg-white" readonly placeholder="Pilih range tanggal">
                         </div>
                         <div>
                             <label>&nbsp;</label>
@@ -127,11 +126,10 @@
                             <thead>
                                 <tr>
                                     <th>PO No</th>
-                                    <th>Tanggal</th>
                                     <th>Forecast Ref</th>
                                     <th>Vendor</th>
-                                    <th>Plan No</th>
-                                    <th>Week</th>
+                                    <th>Plan Description</th>
+                                    <th>Tanggal Create PO</th>
                                     <th>Warehouse</th>
                                     <th class="text-end">Total Qty</th>
                                     <th>Status</th>
@@ -174,7 +172,7 @@
                                     <div class="col-6"><span class="po-label">Delivery Date</span><div class="po-value" id="poDeliveryDate">-</div></div>
                                     <div class="col-4"><span class="po-label">Warehouse</span><div class="po-value small" id="poWhse">-</div></div>
                                     <div class="col-4"><span class="po-label">Plan No</span><div class="po-value small" id="poPlanNo">-</div></div>
-                                    <div class="col-4"><span class="po-label">Week</span><div class="po-value small" id="poWeek">-</div></div>
+                                    <div class="col-4"><span class="po-label">Lokasi Pengambilan</span><div class="po-value small" id="poPickup">-</div></div>
                                 </div>
                             </div>
                         </div>
@@ -192,22 +190,21 @@
                             <div id="modalFcBody">
                                 <div class="row g-2 mb-3 mt-2">
                                     <div class="col-md-2"><div class="po-label">Forecast Date</div><div class="po-value small" id="modalFcDate">-</div></div>
-                                    <div class="col-md-2"><div class="po-label">Period</div><div class="po-value small" id="modalFcPeriod">-</div></div>
                                     <div class="col-md-2"><div class="po-label">Company</div><div class="po-value small" id="modalFcCompany">-</div></div>
-                                    <div class="col-md-3"><div class="po-label">Farm</div><div class="po-value small" id="modalFcFarm">-</div></div>
+                                    <div class="col-md-3"><div class="po-label">Unit</div><div class="po-value small" id="modalFcFarm">-</div></div>
                                     <div class="col-md-3"><div class="po-label">Plan Description</div><div class="po-value small" id="modalFcPlanDesc">-</div></div>
                                 </div>
                                 <div style="border:1px solid #bbf7d0;border-radius:10px;overflow:hidden;">
                                     <table class="table table-sm mb-0" style="font-size:.8rem;">
                                         <thead style="background:#dcfce7;">
-                                            <tr><th>Item Code</th><th>Item Name</th><th>Flag</th><th class="text-end">Rec. Qty</th><th class="text-end">Manual Adj.</th><th class="text-end">Final Qty</th></tr>
+                                            <tr><th>Item Code</th><th>Item Name</th><th class="text-end">Qty</th></tr>
                                         </thead>
-                                        <tbody id="modalFcLines"><tr><td colspan="6" class="text-center text-muted py-2">-</td></tr></tbody>
+                                        <tbody id="modalFcLines"><tr><td colspan="3" class="text-center text-muted py-2">-</td></tr></tbody>
                                     </table>
                                 </div>
                                 <div class="d-flex gap-4 mt-2 ps-1" style="font-size:.8rem;">
                                     <span class="text-muted">Total Item: <strong id="modalFcTotalItem">0</strong></span>
-                                    <span class="text-muted">Total Final Qty: <strong id="modalFcTotalFinal">0</strong></span>
+                                    <span class="text-muted">Total Qty: <strong id="modalFcTotalFinal">0</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -241,9 +238,12 @@
                         <div class="col-md-6">
                             <div class="po-summary-box">
                                 <div class="po-summary-row"><span class="po-summary-label">Total Before Discount</span><span class="fw-bold" id="poSubtotal">Rp 0</span></div>
-                                <div class="po-summary-row"><span class="po-summary-label">Discount & Tax (11%)</span><span class="fw-bold" id="poTax">Rp 0</span></div>
+                                <div class="po-summary-row"><span class="po-summary-label">Discount</span><span class="fw-bold" id="poDiscount">Rp 0</span></div>
+                                <div class="po-summary-row"><span class="po-summary-label">Freight</span><span class="fw-bold" id="poFreight">Rp 0</span></div>
+                                <div class="po-summary-row"><span class="po-summary-label">Rounding</span><span class="fw-bold" id="poRounding">Rp 0</span></div>
+                                <div class="po-summary-row"><span class="po-summary-label">Tax (11%)</span><span class="fw-bold" id="poTax">Rp 0</span></div>
                                 <hr>
-                                <div class="po-summary-row mt-2"><span class="fw-bold text-dark">Total Amount Due</span><span class="po-summary-total" id="poTotalDue">Rp 0</span></div>
+                                <div class="po-summary-row mt-2"><span class="fw-bold text-dark">Total Payment Due</span><span class="po-summary-total" id="poTotalDue">Rp 0</span></div>
                             </div>
                         </div>
                     </div>
@@ -292,7 +292,7 @@
         function renderTable(list) {
             const tbody = document.getElementById("poBody");
             if (!list.length) {
-                tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="bi bi-inbox"></i>Belum ada PO yang digenerate.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="bi bi-inbox"></i>Belum ada PO yang digenerate.</td></tr>`;
                 return;
             }
             tbody.innerHTML = list.map(o => {
@@ -301,12 +301,11 @@
                     <td class="fw-semibold text-success" style="cursor:pointer;" onclick="openOrderDetail('${o.no.replace(/'/g,"\\'")}')">
                         ${o.no} <i class="bi bi-box-arrow-up-right ms-1" style="font-size:10px;opacity:.5;"></i>
                     </td>
-                    <td>${o.date || "-"}</td>
                     <td><span class="tag-fc">${o.fcRef || "-"}</span></td>
-                    <td>${o.vendorCode ? "VND-" + o.vendorCode : "-"}</td>
-                    <td>${o.planNo || "-"}</td>
-                    <td>${o.week || "-"}</td>
-                    <td>${o.warehouse || "-"}</td>
+                    <td>${o.vendorCode ? poVendorInfo(o.vendorCode).name : "-"}</td>
+                    <td>${o.planDesc || o.planName || o.planNo || "-"}</td>
+                    <td>${formatDateShort(o.date)}</td>
+                    <td>${poWarehouseName(o)}</td>
                     <td class="text-end fw-semibold" style="color:#166634;">${qty.toLocaleString("id-ID")} kg</td>
                     <td>${statusBadge(o.status)}</td>
                     <td><button class="btn-view" onclick="openOrderDetail('${o.no.replace(/'/g,"\\'")}')"><i class="bi bi-eye"></i><span class="tip">View Detail</span></button></td>
@@ -329,11 +328,7 @@
             const order = orders.find(o => o.no === no);
             if (!order) return;
 
-            const vendorMap = {
-                SIC: { code:"VND-SIC", name:"SIC — Supplier Pakan & Feed", contact:"Agus Prasetyo" },
-                CTU: { code:"VND-CTU", name:"CTU — Supplier DOC / Bibit Ayam", contact:"Rini Kusuma" }
-            };
-            const vendor = vendorMap[order.vendorCode] || vendorMap["SIC"];
+            const vendor = poVendorInfo(order.vendorCode);
 
             document.getElementById("poVendorCode").textContent    = vendor.code;
             document.getElementById("poVendorName").textContent    = vendor.name;
@@ -342,9 +337,9 @@
             document.getElementById("poStatus").textContent        = order.status || "Open";
             document.getElementById("poPostingDate").textContent   = formatDateShort(order.date);
             document.getElementById("poDeliveryDate").textContent  = order.requiredDate || formatDateShort(order.date);
-            document.getElementById("poWhse").textContent          = order.warehouse || "-";
+            document.getElementById("poWhse").textContent          = poWarehouseName(order);
             document.getElementById("poPlanNo").textContent        = order.planNo || "-";
-            document.getElementById("poWeek").textContent          = order.week || "-";
+            document.getElementById("poPickup").textContent        = order.pickupLocation || "-";
             document.getElementById("poRemarks").textContent       = order.remarks || "-";
 
             // Forecast section
@@ -354,18 +349,16 @@
                 const fc = storedFc.find(f => f.fcNo === order.fcRef);
                 document.getElementById("modalFcRef").textContent     = order.fcRef;
                 document.getElementById("modalFcDate").textContent    = fc ? fc.fcDate  : "-";
-                document.getElementById("modalFcPeriod").textContent  = fc ? fc.period  : order.week || "-";
                 document.getElementById("modalFcCompany").textContent = fc ? fc.company : "-";
                 document.getElementById("modalFcFarm").textContent    = fc ? fc.farm    : "-";
-                document.getElementById("modalFcPlanDesc").textContent= fc ? fc.planDesc: "-";
+                document.getElementById("modalFcPlanDesc").textContent= fc ? (fc.namaPlasma || fc.planDesc || fc.planName || "-") : (order.planDesc || "-");
                 const fcLines = fc ? (fc.lines || []) : [];
                 let totalFinal = 0;
                 document.getElementById("modalFcLines").innerHTML = fcLines.map(l => {
                     const fq = (Number(l.recommendedQty)||0) + (Number(l.manualAdjustment)||0);
                     totalFinal += fq;
-                    const flagCls = l.flag === "Manual" ? "badge bg-warning text-dark" : "badge bg-primary";
-                    return `<tr><td class="mono">${l.itemCode}</td><td>${l.itemName}</td><td><span class="${flagCls}" style="font-size:.7rem;">${l.flag||"Auto"}</span></td><td class="text-end">${(l.recommendedQty||0).toLocaleString()}</td><td class="text-end">${(l.manualAdjustment||0).toLocaleString()}</td><td class="text-end fw-bold text-success">${fq.toLocaleString()}</td></tr>`;
-                }).join("") || '<tr><td colspan="6" class="text-center text-muted py-2">-</td></tr>';
+                    return `<tr><td class="mono">${l.itemCode}</td><td>${l.itemName}</td><td class="text-end fw-bold text-success">${fq.toLocaleString()}</td></tr>`;
+                }).join("") || '<tr><td colspan="3" class="text-center text-muted py-2">-</td></tr>';
                 document.getElementById("modalFcTotalItem").textContent = fcLines.length;
                 document.getElementById("modalFcTotalFinal").textContent = totalFinal.toLocaleString();
                 fcSection.style.display = "block";
@@ -381,13 +374,16 @@
             document.getElementById("poTbodyItems").innerHTML = lines.map((item, i) => {
                 const sub = (item.price||0) * (item.qty||0);
                 total += sub;
-                return `<tr><td class="ps-3 text-muted small">${i+1}</td><td><span class="mono fw-bold">${item.sku}</span></td><td>${item.name}</td><td class="text-end">${item.qty}</td><td>${item.uom||"Kg"}</td><td class="text-end">${rupiah(item.price)}</td><td>WH-01</td><td class="text-end pe-3 fw-bold">${rupiah(sub)}</td></tr>`;
+                return `<tr><td class="ps-3 text-muted small">${i+1}</td><td><span class="mono fw-bold">${item.sku}</span></td><td>${item.name}</td><td class="text-end">${item.qty}</td><td>${item.uom||"Kg"}</td><td class="text-end">${rupiah(item.price)}</td><td>${poWarehouseName(order)}</td><td class="text-end pe-3 fw-bold">${rupiah(sub)}</td></tr>`;
             }).join("") || '<tr><td colspan="8" class="text-center text-muted py-3">Tidak ada item.</td></tr>';
 
-            const tax = total * 0.11;
-            document.getElementById("poSubtotal").textContent = rupiah(total);
-            document.getElementById("poTax").textContent      = rupiah(tax);
-            document.getElementById("poTotalDue").textContent = rupiah(total + tax);
+            const tt = poTotals(lines, order);
+            document.getElementById("poSubtotal").textContent = rupiah(tt.before);
+            document.getElementById("poDiscount").textContent = rupiah(tt.discount);
+            document.getElementById("poFreight").textContent  = rupiah(tt.freight);
+            document.getElementById("poRounding").textContent = rupiah(tt.rounding);
+            document.getElementById("poTax").textContent      = rupiah(tt.tax);
+            document.getElementById("poTotalDue").textContent = rupiah(tt.payment);
 
             new bootstrap.Modal(document.getElementById("orderDetailModal")).show();
         }
@@ -400,39 +396,56 @@
             if (chev) chev.style.transform = collapsed ? "rotate(0deg)" : "rotate(180deg)";
         }
 
+        let _dateRange = { from: "", to: "" };
+        let _datePicker = null;
+
         function getFilteredList() {
             const search = document.getElementById("fSearch").value.trim().toLowerCase();
             const status = document.getElementById("fStatus").value;
-            const from   = document.getElementById("fDateFrom").value;
-            const to     = document.getElementById("fDateTo").value;
+            const from   = _dateRange.from;
+            const to     = _dateRange.to;
             return allPO.filter(o => {
                 if (status && (o.status || "Open") !== status) return false;
                 if (from && (o.date || "") < from) return false;
                 if (to   && (o.date || "") > to)   return false;
                 if (search) {
-                    const hay = [o.no, o.fcRef, o.vendorCode, o.planNo, o.week, o.warehouse, o.customer].join(" ").toLowerCase();
+                    const hay = [o.no, o.fcRef, o.vendorCode, o.vendorName, o.planNo, o.planDesc, o.planName, o.warehouse, poWarehouseName(o), o.customer].join(" ").toLowerCase();
                     if (!hay.includes(search)) return false;
                 }
                 return true;
             });
         }
-
         function applyFilter() {
             const list = getFilteredList();
             renderSummary(list);
             renderTable(list);
         }
 
-        function resetFilter() {
-            ["fSearch", "fStatus", "fDateFrom", "fDateTo"].forEach(id => document.getElementById(id).value = "");
-            renderSummary(allPO);
-            renderTable(allPO);
+        function setDefaultRange() {
+            const today = new Date();
+            _datePicker.setDate([new Date(today.getTime() - 7 * 864e5), today], false);
+            _dateRange = { from: flatpickr.formatDate(_datePicker.selectedDates[0], "Y-m-d"), to: flatpickr.formatDate(_datePicker.selectedDates[1], "Y-m-d") };
         }
 
+        function resetFilter() {
+            ["fSearch", "fStatus"].forEach(id => document.getElementById(id).value = "");
+            setDefaultRange();
+            applyFilter();
+        }
         allPO = getPoList().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-        renderSummary(allPO);
-        renderTable(allPO);
-        document.querySelectorAll("#fStatus,#fDateFrom,#fDateTo").forEach(el => el.addEventListener("change", applyFilter));
+        // Range tanggal dalam 1 kolom (seperti filter Forecast List), default 7 hari ke belakang s/d hari ini
+        _datePicker = flatpickr("#dateRange", {
+            mode: "range", dateFormat: "d-M-y", locale: { rangeSeparator: " s/d ", firstDayOfWeek: 1 },
+            onChange: (sel) => {
+                if (sel.length === 1) return;
+                _dateRange = sel.length ? { from: flatpickr.formatDate(sel[0], "Y-m-d"), to: flatpickr.formatDate(sel[1], "Y-m-d") } : { from: "", to: "" };
+                applyFilter();
+            },
+            onClose: (sel, s, fp) => { if (sel.length === 1) fp.setDate([sel[0], sel[0]], true); }
+        });
+        setDefaultRange();
+        applyFilter();
+        document.querySelectorAll("#fStatus").forEach(el => el.addEventListener("change", applyFilter));
         document.getElementById("fSearch").addEventListener("input", applyFilter);
     </script>
 </body>
